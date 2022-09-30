@@ -25,6 +25,10 @@ public class CreateWhiteBoard {
         int serverPort = Integer.parseInt(args[1]);
         String adminUsername = args[2];
 
+        if (adminUsername.contains(":")) {
+            System.out.println("Forbidden character ':'");
+            System.exit(1);
+        }
 
         // Try start the socket server
 

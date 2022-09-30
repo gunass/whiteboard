@@ -2,10 +2,12 @@ package server;
 
 import drawing.Drawing;
 import server.IWhiteboard;
+import util.UserIdentity;
 
 import java.awt.image.BufferedImage;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Stack;
 
 /**
@@ -19,8 +21,10 @@ public class Whiteboard extends UnicastRemoteObject implements IWhiteboard {
     private final int DEFAULT_HEIGHT = 500;
     private final int DEFAULT_COLOURSPACE = BufferedImage.TYPE_INT_RGB;
 
-    BufferedImage canvas;
-    Stack<Drawing> drawings;
+    protected BufferedImage canvas;
+    protected Stack<Drawing> drawings;
+    protected ArrayList<UserIdentity> authorisedUsers;
+    protected UserIdentity admin;
 
     /**
      * Creates a new whiteboard based on the provided canvas.
@@ -42,16 +46,29 @@ public class Whiteboard extends UnicastRemoteObject implements IWhiteboard {
     }
 
 
-    public BufferedImage getCanvas() {
-        return canvas;
+    public BufferedImage getCanvas(String username, String password) {
+
+        if (verifyUser(username, password)) {
+            return canvas;
+        } else return null;
+
     }
 
-    public void drawToCanvas(Drawing drawing) {
-        // FIXME: stub
+    public void drawToCanvas(String username, String password, Drawing drawing) {
+
     }
 
     protected void resetCanvas() {
 
+    }
+
+    private boolean verifyUser(String username, String password) {
+        for (UserIdentity i : authorisedUsers) {
+            if (i.username.equals(username) && i.secret.equals(password)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

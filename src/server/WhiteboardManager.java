@@ -1,6 +1,7 @@
 package server;
 
 import drawing.Drawing;
+import util.MessageFactory;
 import util.UserIdentity;
 
 import java.io.*;
@@ -79,7 +80,7 @@ public class WhiteboardManager extends Thread {
         BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-        String msg = br.readLine();
+        String msg = MessageFactory.readMsg(br);
         System.out.println("Client says: "+msg);
 
         // FIXME: implement
@@ -87,7 +88,7 @@ public class WhiteboardManager extends Thread {
 
         // Send a brief ack indicating success/failure of request
         String reply = "You'll have to speak up, I'm wearing a towel.\n";
-        bw.write(reply);
+        MessageFactory.writeMsg(bw, reply);
 
     }
 

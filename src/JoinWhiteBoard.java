@@ -20,6 +20,11 @@ public class JoinWhiteBoard {
         int serverPort = Integer.parseInt(args[1]);
         String username = args[2];
 
+        if (username.contains(":")) {
+            System.out.println("Forbidden character ':'");
+            System.exit(1);
+        }
+
         // Start the GUI
 
         ClientGUI cgui = new ClientGUI(serverIP, serverPort, username);

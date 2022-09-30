@@ -6,8 +6,8 @@ import java.awt.image.BufferedImage;
 
 public interface IWhiteboard {
 
-    public BufferedImage getCanvas();
+    public BufferedImage getCanvas(String u, String p);
 
-    public void drawToCanvas(Drawing drawing);
+    public void drawToCanvas(String u, String p, Drawing drawing);
 
 }

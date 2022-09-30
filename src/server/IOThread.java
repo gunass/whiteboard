@@ -20,6 +20,7 @@ public class IOThread extends Thread {
 
     @Override
     public void run() {
+        System.out.println("IOThread running...");
         try {
             this.serverSocket = new ServerSocket(port);
             while (!isInterrupted()) {
