@@ -46,6 +46,8 @@ public class WhiteboardManager extends Thread {
 
         this.ioThread = new IOThread(port, incomingConnections);
         ioThread.start();
+
+        System.out.println("Server started successfully on port "+port);
     }
 
     /**
@@ -56,6 +58,7 @@ public class WhiteboardManager extends Thread {
         while (!isInterrupted()) {
             try {
                 Socket socket = incomingConnections.take();
+                System.out.println("Received connection from port "+socket.getPort());
                 processRequest(socket);
             } catch (InterruptedException e) {
                 System.out.println("InterruptedException in WBManager");
@@ -66,7 +69,7 @@ public class WhiteboardManager extends Thread {
     }
 
     /**
-     * FIXME: STUB
+     * FIXME: Stub echo server
      * Accepts client requests and processes them according to request type and client identity
      * @param socket
      * @throws IOException
