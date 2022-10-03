@@ -1,3 +1,4 @@
+import client.ClientGUI;
 import server.*;
 
 import java.io.IOException;
@@ -14,46 +15,15 @@ public class CreateWhiteBoard {
 
     public static void main(String args[]) throws RemoteException {
 
-        // Parse args
-
-        if (args.length != 3) {
-            System.out.println("Arguments must be <server ip, server port, host username>");
-            System.exit(1);
-        }
-
-        String serverIP = args[0];
-        int serverPort = Integer.parseInt(args[1]);
-        String adminUsername = args[2];
-
-        if (adminUsername.contains(":")) {
-            System.out.println("Forbidden character ':'");
-            System.exit(1);
-        }
-
-        // Try start the socket server
-
-        WhiteboardManager managerServer;
         try {
-
-            managerServer = new WhiteboardManager(serverPort);
-            managerServer.start();
-
-            // start up a client gui for the admin
-
-            // wait to finish
-            managerServer.join();
+            RemoteWhiteboard managerServer = new RemoteWhiteboard(args[0]);
 
         } catch (IOException e) {
             System.out.println("Error: starting whiteboard manager failed");
             System.exit(1);
-        } catch (InterruptedException e) {
-            System.out.println("Error: whiteboard manager interrupted");
-            System.exit(1);
         }
 
-
-
+        ClientGUI adminGUI = new ClientGUI();
 
     }
-
 }

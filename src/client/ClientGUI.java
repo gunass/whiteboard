@@ -1,12 +1,9 @@
 package client;
-import util.MessageFactory;
+
+import util.UserIdentity;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
 
@@ -25,34 +22,32 @@ public class ClientGUI {
     private final int _WINDOW_WIDTH = _CANVAS_WIDTH + 3*_BORDER + _USERS_DISPLAY_WIDTH;
     private final int _WINDOW_HEIGHT = _CANVAS_HEIGHT + 4*_BORDER + 2*_MENU_AREA_HEIGHT;
     private final int _MENU_AREA_ROOT_Y = _CANVAS_HEIGHT + 2*_BORDER;
-    private String[] users = {"Testel", "Testessa", "Testley"};
     private final String[] toolsAvailable = {"Free Line", "Line", "Triangle", "Rectangle", "Circle", "Text"};
     private int menuNextX = _BORDER;
-    private String toolSelected = toolsAvailable[0];
 
     private Color selectedColour = Color.BLUE;
     private JFrame mainWindow;
     private JPanel canvasPanel;
-    private JComboBox drawables;
+    private JComboBox<String> drawables;
     private JList<String> usersList;
     private JLabel usersListLabel;
     private JButton colourButton;
     private JPanel colourPanel;
+    private JButton clearButton;
 
-    private String username = "_NOUSER_";
-    private String password = "_NOPASS_";
+    private UserIdentity uid = new UserIdentity("NOUSER", "NOPASS");
     private Socket socket;
+
+    private InteractiveCanvasManager canvasMgr;
 
     /**
      * Creates a client GUI with all the default features (no refunds)
-     * @param hostname
-     * @param port
-     * @param username
      */
-    public ClientGUI(String hostname, int port, String username) {
+    public ClientGUI() {
 
         this.mainWindow = new JFrame();
         mainWindow.setResizable(false);
+        mainWindow.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         this.canvasPanel = new JPanel();
         canvasPanel.setLayout(null);
@@ -65,37 +60,30 @@ public class ClientGUI {
 
         JLabel hostnameFieldLabel = new JLabel("Hostname: ");
         hostnameFieldLabel.setBounds(0, (_BORDER + _TEXT_HEIGHT), 100, _TEXT_HEIGHT);
-        JTextField hostnameField = new JTextField(hostname);
+        JTextField hostnameField = new JTextField("localhost");
         hostnameField.setBounds(100, (_BORDER + _TEXT_HEIGHT), 200, _TEXT_HEIGHT);
         canvasPanel.add(hostnameFieldLabel);
         canvasPanel.add(hostnameField);
 
-        JLabel portFieldLabel = new JLabel("Port: ");
-        portFieldLabel.setBounds(0, 2*(_BORDER + _TEXT_HEIGHT), 100, _TEXT_HEIGHT);
-        JTextField portField = new JTextField(port + "");
-        portField.setBounds(100, 2*(_BORDER + _TEXT_HEIGHT), 200, _TEXT_HEIGHT);
-        canvasPanel.add(portFieldLabel);
-        canvasPanel.add(portField);
-
         JLabel nameFieldLabel = new JLabel("Username: ");
-        nameFieldLabel.setBounds(0, 3*(_BORDER + _TEXT_HEIGHT), 100, _TEXT_HEIGHT);
-        JTextField nameField = new JTextField(username);
-        nameField.setBounds(100, 3*(_BORDER + _TEXT_HEIGHT), 200, _TEXT_HEIGHT);
+        nameFieldLabel.setBounds(0, 2*(_BORDER + _TEXT_HEIGHT), 100, _TEXT_HEIGHT);
+        JTextField nameField = new JTextField("user");
+        nameField.setBounds(100, 2*(_BORDER + _TEXT_HEIGHT), 200, _TEXT_HEIGHT);
         canvasPanel.add(nameFieldLabel);
         canvasPanel.add(nameField);
 
         JLabel passwordFieldLabel = new JLabel("Password: ");
-        passwordFieldLabel.setBounds(0, 4*(_BORDER + _TEXT_HEIGHT), 100, _TEXT_HEIGHT);
-        JTextField passwordField = new JPasswordField();
-        passwordField.setBounds(100, 4*(_TEXT_HEIGHT + _BORDER), 200, _TEXT_HEIGHT);
+        passwordFieldLabel.setBounds(0, 3*(_BORDER + _TEXT_HEIGHT), 100, _TEXT_HEIGHT);
+        JTextField passwordField = new JPasswordField("pass");
+        passwordField.setBounds(100, 3*(_TEXT_HEIGHT + _BORDER), 200, _TEXT_HEIGHT);
         canvasPanel.add(passwordField);
         canvasPanel.add(passwordFieldLabel);
 
         JButton connectButton = new JButton("Connect");
-        connectButton.setBounds(0, 5*(_TEXT_HEIGHT + _BORDER), 100, _TEXT_HEIGHT);
+        connectButton.setBounds(0, 4*(_TEXT_HEIGHT + _BORDER), 100, _TEXT_HEIGHT);
 
         JTextArea errorTextArea = new JTextArea();
-        errorTextArea.setBounds(100, 5*(_TEXT_HEIGHT + _BORDER), 200, _TEXT_HEIGHT);
+        errorTextArea.setBounds(100, 5*(_TEXT_HEIGHT + _BORDER), 400, 5*_TEXT_HEIGHT);
         errorTextArea.setBackground(mainWindow.getBackground());
         canvasPanel.add(errorTextArea);
 
@@ -105,50 +93,35 @@ public class ClientGUI {
          * FIXME: Currently, as a stub, all join requests are approved
          */
         connectButton.addActionListener(e -> {
-            String msg = MessageFactory.createMessage(MessageFactory.MessageType.JOIN_REQUEST, username, passwordField.getText(), "");
-            String reply = "";
+
             try {
-                socket = new Socket(hostname, port);
-                BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                MessageFactory.writeMsg(bw, msg);
-                reply = MessageFactory.readMsg(br);
-                socket.close();
-                br.close();
-                bw.close();
-            } catch (IOException ex) {
-                System.out.println("Socket received an error");
-                errorTextArea.setText("Error connecting to server");
+                String rmiRef = "//"+hostnameField.getText()+"/Whiteboard";
+                this.uid = new UserIdentity(nameField.getText(), passwordField.getText());
+                canvasMgr = new InteractiveCanvasManager(rmiRef, uid, _CANVAS_WIDTH, _CANVAS_HEIGHT);
+                canvasMgr.canvas.colourSelected = selectedColour;
+                mainWindow.remove(canvasPanel);
+                mainWindow.add(canvasMgr.canvas);
+                drawables.setEnabled(true);
+                colourButton.setEnabled(true);
+                clearButton.setEnabled(canvasMgr.isAdmin());
+
+            } catch (Exception f) {
                 passwordField.setText("");
-                return;
+                errorTextArea.setText(f.getMessage());
             }
-            // Test if the reply starts with SUCCESS
-            String expected = MessageFactory.createReply(MessageFactory.MessageType.SUCCESS_REPLY, "");
-            if (!reply.startsWith(expected)) {
-                System.out.println("Connection rejected");
-                errorTextArea.setText("Connection rejected");
-                passwordField.setText("");
-                return;
-            }
-            // If success, clear the panel
-            mainWindow.remove(canvasPanel);
-            // Store the successful credentials
-            this.username = username;
-            this.password = passwordField.getText();
-            // Take the RMI reference from the reply and boot up the interactive canvas
-            String rmiRef = reply.replace(expected + ":", "");
-            InteractiveCanvas canvas = new InteractiveCanvas(hostname, rmiRef);
-            canvas.setBounds(canvasPanel.getBounds());
-            mainWindow.add(canvas);
+
         });
 
         canvasPanel.add(connectButton);
         mainWindow.add(canvasPanel);
 
         // Combo box to select the tool in use
-        String drawings[] = toolsAvailable;
-        this.drawables = new JComboBox<String>(drawings);
+        this.drawables = new JComboBox<String>(toolsAvailable);
+        drawables.addActionListener(e -> {
+            canvasMgr.canvas.toolSelected = (String) drawables.getSelectedItem();
+        });
         drawables.setBounds(menuNextX, _MENU_AREA_ROOT_Y, _DRAWABLES_WIDTH, _MENU_AREA_HEIGHT);
+        drawables.setEnabled(false);
         menuNextX += _DRAWABLES_WIDTH + _BORDER;
         mainWindow.add(drawables);
 
@@ -156,6 +129,7 @@ public class ClientGUI {
         this.colourButton = new JButton("Colour");
         colourButton.setBounds(menuNextX, _MENU_AREA_ROOT_Y, _COLOUR_BUTTON_WIDTH, _MENU_AREA_HEIGHT);
         menuNextX += _COLOUR_BUTTON_WIDTH + _BORDER;
+        colourButton.setEnabled(false);
 
         this.colourPanel = new JPanel();
         colourPanel.setOpaque(true);
@@ -164,16 +138,26 @@ public class ClientGUI {
         colourPanel.setBackground(selectedColour);
 
         colourButton.addActionListener(e -> {
-            Color color = JColorChooser.showDialog(colourButton, "Select colour", colourPanel.getBackground());
-                    colourPanel.setBackground(color);
+            selectedColour = JColorChooser.showDialog(colourButton, "Select colour", colourPanel.getBackground());
+            colourPanel.setBackground(selectedColour);
+            canvasMgr.canvas.colourSelected = selectedColour;
         }
         );
 
+        this.clearButton = new JButton("Clear");
+        clearButton.setBounds(menuNextX, _MENU_AREA_ROOT_Y, 50, _MENU_AREA_HEIGHT);
+        menuNextX += _MENU_AREA_HEIGHT + _BORDER;
+        clearButton.setEnabled(false);
+        clearButton.addActionListener(e -> {
+            canvasMgr.requestClearCanvas();
+        });
+
+        mainWindow.add(clearButton);
         mainWindow.add(colourButton);
         mainWindow.add(colourPanel);
 
         // A list to show the current users in the server
-        this.usersList = new JList<>(users);
+        this.usersList = new JList<>();
         usersList.setBounds(_BORDER*2 + _CANVAS_WIDTH, _BORDER, _USERS_DISPLAY_WIDTH, _USERS_DISPLAY_HEIGHT);
         mainWindow.add(usersList);
 
@@ -184,22 +168,6 @@ public class ClientGUI {
         mainWindow.setSize(_WINDOW_WIDTH,_WINDOW_HEIGHT);
         mainWindow.setLayout(null);
         mainWindow.setVisible(true);
-    }
-
-    /**
-     * FIXME: stub.
-     * An interactive canvas JComponent that displays the image obtained from the remote
-     * canvas and responds to user interaction by creating drawings.
-     */
-    public class InteractiveCanvas extends JPanel {
-
-        String hostname;
-        String rmiReference;
-        public InteractiveCanvas(String hostname, String rmiReference) {
-            JTextArea loadingText = new JTextArea("Under construction.");
-            this.add(loadingText);
-        }
-
     }
 
 
