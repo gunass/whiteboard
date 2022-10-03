@@ -7,6 +7,11 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
+/**
+ * Interface defining interactions from client->server, including membership activities, retrieving data,
+ * pushing new data, and seeing all users active on the server
+ * @author Alex Epstein
+ */
 public interface IRemoteWhiteboard extends Remote {
 
     public boolean joinWhiteboard(UserIdentity uid) throws RemoteException;

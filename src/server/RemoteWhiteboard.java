@@ -15,8 +15,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 
 /**
- * Is a remote object that maintains a canonical array of Drawing objects, and is responsible for communicating them,
- * managing groups, etc.
+ * Is a remote object that maintains a canonical array of Drawing objects, and is responsible for server->client
+ * communication (mostly a relay of the form client->server->clients*)
  * @author Alex Epstein with thanks to skeleton code: https://en.wikipedia.org/wiki/Java_remote_method_invocation
  */
 public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhiteboard {
@@ -29,7 +29,7 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     private ArrayList<Drawing> drawings;
 
     /**
-     * Creates a new instance of the manager on the provided hostname
+     * Creates a new instance of the manager on the provided hostname (i.e., binds self to //hostname:1099/Whiteboard)
      * @throws IOException
      */
     public RemoteWhiteboard(String hostname) throws IOException {
@@ -77,7 +77,7 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     }
 
     /**
-     * Allows new users to join the server, subject to the admin's approval (currently a stub)
+     * Allows new users to join the server, subject to the admin's approval.
      * If the admin rejects the user or RMI error, returns false, otherwise true.
      * @param uid
      * @return
@@ -96,9 +96,9 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     }
 
     /**
-     * Messages the admin to ask if they approve the new user.
+     * Calls the approveUser() method of the admin to ask for approval
      * @param uid
-     * @return
+     * @return approval
      * @throws RemoteException
      */
     private boolean approveUser(UserIdentity uid) throws RemoteException {
@@ -108,7 +108,7 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     /**
      * Returns a list of users currently on the server
      * @param uid
-     * @return
+     * @return a list of users
      * @throws RemoteException
      */
     public ArrayList<UserIdentity> getUsers(UserIdentity uid) throws RemoteException {
@@ -120,7 +120,7 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     /**
      * Returns the current state of the canvas, i.e. an array of Drawings
      * @param uid
-     * @return
+     * @return a list of drawings on the server
      * @throws RemoteException
      */
     public ArrayList<Drawing> getCanvas(UserIdentity uid) throws RemoteException {
@@ -144,8 +144,8 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     }
 
     /**
-     * Allows approved users to submit a drawing to add to the canvas
-     * Then, the drawing is sent to all users
+     * Allows approved users to submit a drawing to add to the canvas.
+     * Then, the drawing is sent to all users.
      * @param uid
      * @param drawing
      * @throws RemoteException
@@ -161,6 +161,11 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
         }
     }
 
+    /**
+     * Tests if a user is present in the list of admin-approved users
+     * @param uid
+     * @return
+     */
     private boolean isUser(UserIdentity uid) {
         for (UserIdentity user : users) {
             if (user.is(uid)) {

@@ -2,6 +2,10 @@ package drawing;
 
 import java.awt.*;
 
+/**
+ * A rectangle
+ * @author Alex Epstein
+ */
 public class Rectangle extends Shape {
 
     public Rectangle(String artist, long timestamp, Color color) {

@@ -7,6 +7,12 @@ import java.awt.*;
 import java.io.*;
 import java.net.Socket;
 
+/**
+ * Default graphical user interface for the whiteboard application. Begins with a login screen which prompts
+ * the user for server hostname, username and password. On "connect", the user requests a join to the server.
+ * If approved, the login screen is replaced by an InteractiveCanvas bound to the server.
+ * @author Alex Epstein
+ */
 public class ClientGUI {
 
     private final int _CANVAS_HEIGHT = 500;

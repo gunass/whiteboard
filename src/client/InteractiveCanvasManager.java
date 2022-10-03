@@ -17,7 +17,11 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Manages the interactive canvas and exists as a remote object the server can talk to
+ * Manages the interactive canvas and exists as a remote object that communicates with server
+ * The "clientside" distributed link - this object is called by the canvas to transmit new drawings to server
+ * Remote methods are defined in the interface
+ * @see client.IInteractiveCanvasManager
+ * @author Alex Epstein
  */
 
 public class InteractiveCanvasManager extends UnicastRemoteObject implements IInteractiveCanvasManager {
@@ -91,22 +95,41 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
         canvas.repaint();
     }
 
+    /**
+     * Called by the GUI on "clear" button press
+     */
     public void requestClearCanvas() {
         try {
             remoteWhiteboard.clearCanvas(uid);
         } catch (Exception ignored) {};
     }
 
+    /**
+     * Called by the canvas when a drawing is complete, i.e. the mouse has been released.
+     * Sends the drawing object to the server
+     * @param drawing
+     */
     protected void sendDrawing(Drawing drawing) {
         try {
             remoteWhiteboard.drawToCanvas(uid, drawing);
         } catch (RemoteException ignored) {}
     }
 
+    /**
+     * Called by the server when a new user requests to join the whiteboard. Recursively calls the private method
+     * @param uid
+     * @return
+     */
     public boolean approveUser(UserIdentity uid) {
         return _approveUser(uid);
     }
 
+    /**
+     * Launches a dialog on the user's (admin) screen to ask approval for a new user.
+     * On "yes", the join is approved. On "no" or window close, the join is rejected.
+     * @param uid
+     * @return
+     */
     private boolean _approveUser(UserIdentity uid) {
         approved = 0;
         JDialog d = new JDialog((JFrame) canvas.getParent().getParent().getParent().getParent(), "Approve user");

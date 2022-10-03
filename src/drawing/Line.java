@@ -2,6 +2,10 @@ package drawing;
 
 import java.awt.*;
 
+/**
+ * A line :)
+ * @author Alex Epstein
+ */
 public class Line extends Drawing {
 
     public Line(String artist, long timestamp, Color color) {

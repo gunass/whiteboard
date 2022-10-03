@@ -4,8 +4,8 @@ import java.io.*;
 import java.net.Socket;
 
 /**
- * FIXME: STUB
- * Executable used to join an existing whiteboard
+ * Executable class used to join an existing whiteboard (i.e., it does not spawn a server)
+ * @author Alex Epstein
  */
 public class JoinWhiteBoard {
 

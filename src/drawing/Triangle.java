@@ -2,6 +2,11 @@ package drawing;
 
 import java.awt.*;
 
+/**
+ * A triangle
+ * FIXME: forced isosceles and always oriented "upways".
+ * @author Alex Epstein
+ */
 public class Triangle extends Shape {
 
     public Triangle(String artist, long timestamp, Color color) {

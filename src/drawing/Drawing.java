@@ -4,9 +4,7 @@ import java.awt.*;
 import java.io.Serializable;
 
 /**
- * FIXME: STUB
  * Parent class of all drawing types, subdivided into free line, text, shape.
- * Should inherit various properties from Java 2D API
  * @author Alex Epstein
  */
 public abstract class Drawing implements Serializable {

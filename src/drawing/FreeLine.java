@@ -4,6 +4,10 @@ import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+/**
+ * Free line stored as a series of points
+ * @author Alex Epstein
+ */
 public class FreeLine extends Drawing {
 
 

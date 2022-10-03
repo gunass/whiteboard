@@ -7,7 +7,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Remote interface for client canvas manager
+ * Remote interface for client canvas manager. The server calls these methods and so mutates the underlying canvas.
  * @author Alex Epstein
  */
 public interface IInteractiveCanvasManager extends Remote {

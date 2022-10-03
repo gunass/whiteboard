@@ -5,8 +5,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 
 /**
- * Master server class that manages the RMI and socketed server components
- * This should be renamed to CreateWhiteBoard
+ * Executable class that creates a new whiteboard server and a client (admin) GUI to join it.
  * @author Alex Epstein
  */
 
