@@ -19,6 +19,12 @@ only submit trivial, temporary passwords.
 Once connected, allows the user to choose from a range of drawing tools (free line, straight line, rectangle, circle, triangle) and colours (256) 
 and make changes directly onto the canvas by mouse drawing.
 
-Also visible is a list of other users connected to the server. 
-
 Administrators can use the "clear" button to clear the current canvas. 
+
+### wishlist
+
+- Implement the list of other connected users, including non-admin clients sending "quit" message on disconnect
+- Allow the admin to kick a user
+- Implement text tool (currently a stub)
+- Implement closing, saving, opening, and quitting the whiteboard
+- More detailed messages to the client on certain types of failure (i.e. duplicate username, invalid hostname, network failure, ...)
