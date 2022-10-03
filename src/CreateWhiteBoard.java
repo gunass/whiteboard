@@ -10,7 +10,6 @@ import java.rmi.RemoteException;
  */
 
 public class CreateWhiteBoard {
-    int DEFAULT_PORT = 3200;
 
     public static void main(String args[]) throws RemoteException {
 
