@@ -10,6 +10,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * Default graphical user interface for the whiteboard application. Begins with a login screen which prompts
@@ -24,10 +25,7 @@ public class ClientGUI {
     private final int _BORDER = 10;
     private final int _MENU_AREA_HEIGHT = 50;
     private final int _TEXT_HEIGHT = 20;
-    private final int _DRAWABLES_WIDTH = 125;
-    private final int _COLOUR_BUTTON_WIDTH = 60;
-    private final int _USERS_DISPLAY_LABEL_HEIGHT = 25;
-    private final int _USERS_DISPLAY_WIDTH = 100;
+    private final int _USERS_DISPLAY_WIDTH = 200;
     private final int _USERS_DISPLAY_HEIGHT = _CANVAS_HEIGHT;
     private final int _WINDOW_WIDTH = _CANVAS_WIDTH + 3*_BORDER + _USERS_DISPLAY_WIDTH;
     private final int _WINDOW_HEIGHT = _CANVAS_HEIGHT + 3*_BORDER + _MENU_AREA_HEIGHT;
@@ -41,6 +39,7 @@ public class ClientGUI {
     private JFrame mainWindow;
     private JPanel canvasPanel;
     private JComboBox<String> drawables;
+    private DefaultListModel<String> usersListModel = new DefaultListModel<>();
     private JList<String> usersList;
     private JLabel usersListLabel;
     private JButton colourButton;
@@ -81,19 +80,30 @@ public class ClientGUI {
         mainWindow.setVisible(true);
     }
 
-    private class UsersList extends JPanel {
+    public void addClientUser(String username) {
+        usersListModel.addElement(username);
+    }
 
+    public void rmClientUser(String username) {
+        for (int i = 0; i < usersListModel.size(); i++) {
+            if (usersListModel.get(i).equals(username)) {
+                usersListModel.remove(i);
+            }
+        }
+    }
+
+    private class UsersList extends JPanel {
         public UsersList() {
 
             this.setLayout(new FlowLayout());
-            usersList = new JList<String>(new String[] {"Jerry", "Terry"});
+            usersList = new JList<>(usersListModel);
             usersList.setFixedCellWidth(_USERS_DISPLAY_WIDTH);
             usersList.setBounds(0,0,_USERS_DISPLAY_WIDTH, _USERS_DISPLAY_HEIGHT);
-
             usersListLabel = new JLabel("Active users");
 
-            this.add(usersList);
             this.add(usersListLabel);
+            this.add(usersList);
+
         }
 
     }
@@ -110,12 +120,9 @@ public class ClientGUI {
             drawables.addActionListener(e -> {
                 canvasMgr.canvas.toolSelected = (String) drawables.getSelectedItem();
             });
-            drawables.setEnabled(false);
 
             // A button and a panel to select and display the pen colour
             colourButton = new JButton("Colour");
-            colourButton.setEnabled(false);
-
             colourPanel = new JPanel();
             colourPanel.setOpaque(true);
             colourPanel.setBackground(_DEFAULT_COLOUR);
@@ -128,7 +135,6 @@ public class ClientGUI {
             );
 
             clearButton = new JButton("Clear");
-            clearButton.setEnabled(false);
             clearButton.addActionListener(e -> {
                 canvasMgr.requestClearCanvas();
             });
@@ -136,16 +142,29 @@ public class ClientGUI {
             disconnectButton = new JButton("Disconnect");
             disconnectButton.setEnabled(false);
             disconnectButton.addActionListener(e -> {
-                // FIXME: actually disconnect from the server
+                canvasMgr.notifyDisconnect();
                 mainWindow.remove(canvasMgr.canvas);
-                mainWindow.add(new ConnectionPanel());
+                ClientGUI.this.canvasPanel = new ConnectionPanel();
+                mainWindow.add(ClientGUI.this.canvasPanel);
+                usersListModel.clear();
+                this.enableAll(false);
             });
+
+            this.enableAll(false);
 
             this.add(drawables);
             this.add(colourButton);
             this.add(colourPanel);
             this.add(clearButton);
             this.add(disconnectButton);
+        }
+
+        public void enableAll(boolean v) {
+            drawables.setEnabled(v);
+            colourButton.setEnabled(v);
+            clearButton.setEnabled(v);
+            disconnectButton.setEnabled(v);
+
         }
 
     }
@@ -230,19 +249,29 @@ public class ClientGUI {
             try {
                 String rmiRef = "//"+hostnameField.getText()+"/Whiteboard";
                 UserIdentity credentials = new UserIdentity(nameField.getText(), passwordField.getText());
-                canvasMgr = new InteractiveCanvasManager(rmiRef, credentials, _CANVAS_WIDTH, _CANVAS_HEIGHT);
+                canvasMgr = new InteractiveCanvasManager(rmiRef, credentials, _CANVAS_WIDTH, _CANVAS_HEIGHT, ClientGUI.this);
                 canvasMgr.canvas.colourSelected = _DEFAULT_COLOUR;
                 canvasMgr.canvas.toolSelected = _DEFAULT_TOOL;
                 mainWindow.remove(canvasPanel);
                 mainWindow.add(canvasMgr.canvas);
-                drawables.setEnabled(true);
-                colourButton.setEnabled(true);
                 clearButton.setEnabled(canvasMgr.isAdmin());
-                disconnectButton.setEnabled(true);
 
+                toolbar.enableAll(true);
+
+                drawables.setToolTipText("Select the tool to draw with");
+                colourButton.setToolTipText("Select the colour to draw with");
+                clearButton.setToolTipText(canvasMgr.isAdmin() ? "Clear the canvas" : "Administrator only");
+                disconnectButton.setText(canvasMgr.isAdmin() ? "Close" : disconnectButton.getText());
+                disconnectButton.setToolTipText(canvasMgr.isAdmin() ? "Close the server" : "Disconnect from server");
+
+            } catch (NullPointerException g) {
+                passwordField.setText("");
+                errorTextArea.setText("Server not found");
+                errorTextArea.repaint();
             } catch (Exception f) {
                 passwordField.setText("");
-                errorTextArea.setText(f.getMessage());
+                errorTextArea.setText("Error " + f);
+                errorTextArea.repaint();
             }
         }
     }

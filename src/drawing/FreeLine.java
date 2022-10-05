@@ -3,6 +3,7 @@ package drawing;
 import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 /**
  * Free line stored as a series of points
@@ -11,11 +12,15 @@ import java.util.ArrayList;
 public class FreeLine extends Drawing {
 
 
-    public ArrayList<FreeLinePoint> points;
+    public LinkedList<FreeLinePoint> points;
+
+    // Optimise the drawing process by specifying how many points are skipped before one is drawn.
+    // 1 by default but can be changed based on various requirements
+    public int _POINT_SKIP_FACTOR = 1;
 
     public FreeLine(String artist, long timestamp, Color color) {
         super(artist, timestamp, color);
-        points = new ArrayList<>();
+        points = new LinkedList<FreeLinePoint>();
     }
 
     public void addPoint(int x, int y) {
@@ -33,8 +38,23 @@ public class FreeLine extends Drawing {
 
     @Override
     public void drawToGraphics(Graphics g) {
-        for (int i = 1; i < points.size(); i += 1) {
-            g.drawLine(points.get(i-1).x, points.get(i-1).y, points.get(i).x, points.get(i).y);
+        int pointsSkipFactor = _POINT_SKIP_FACTOR;
+        for (int i = pointsSkipFactor; i < points.size(); i += pointsSkipFactor) {
+            // FIXME: Refine this to an arc for smoother free lines
+            g.drawLine(points.get(i-pointsSkipFactor).x, points.get(i-pointsSkipFactor).y, points.get(i).x, points.get(i).y);
         }
+    }
+
+    /**
+     * Unique method for FreeLine which deletes a certain proportion of points from the representation
+     * This lowers storage costs and simplifies drawing
+     * @param optimisationFactor: ratio of the old points to the new points, i.e. 5 reduces size to 20% of the original
+     */
+    public void optimise(int optimisationFactor) {
+        LinkedList<FreeLinePoint> newPoints = new LinkedList<FreeLinePoint>();
+        for (int i = 0; i < points.size(); i += optimisationFactor) {
+            newPoints.add(points.get(i));
+        }
+        points = newPoints;
     }
 }

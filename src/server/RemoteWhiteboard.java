@@ -65,10 +65,11 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     public boolean startWhiteboard(UserIdentity uid) throws RemoteException {
         if (admin == null) {
             admin = uid;
-            users.add(uid);
             try {
                 adminClient = (IInteractiveCanvasManager) Naming.lookup( "//" + hostname + "/" + uid.username);
                 clients.add(adminClient);
+                users.add(uid);
+                adminClient.notifyUserJoin(uid.username);
             } catch (NotBoundException | MalformedURLException | ClassCastException e) {
                 return false;
             }
@@ -85,9 +86,12 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
      */
     public boolean joinWhiteboard(UserIdentity uid) throws RemoteException {
         if (approveUser(uid)) {
-            users.add(uid);
             try {
                 clients.add((IInteractiveCanvasManager) Naming.lookup( "//" + hostname + "/" + uid.username));
+                users.add(uid);
+                for (IInteractiveCanvasManager c : clients) {
+                    c.notifyUserJoin(uid.username);
+                }
             } catch (NotBoundException | MalformedURLException | ClassCastException e) {
                 return false;
             }
@@ -103,6 +107,21 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
      */
     private boolean approveUser(UserIdentity uid) throws RemoteException {
         return adminClient.approveUser(uid);
+    }
+
+    public void notifyDisconnect(UserIdentity uid) throws RemoteException {
+        if (!isUser(uid)) {
+            return;
+        }
+
+        for (int i = 0; i < users.size(); i++) {
+            if (uid.is(users.get(i))) {
+                users.remove(users.get(i));
+                clients.remove(clients.get(i));
+            } else {
+                clients.get(i).notifyUserLeft(uid.username);
+            }
+        }
     }
 
     /**
@@ -174,5 +193,7 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
         }
         return false;
     }
+
+
 
 }

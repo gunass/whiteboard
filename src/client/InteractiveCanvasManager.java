@@ -27,11 +27,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class InteractiveCanvasManager extends UnicastRemoteObject implements IInteractiveCanvasManager {
 
     private final UserIdentity uid;
-    private final String rmiReference;
     private final IRemoteWhiteboard remoteWhiteboard;
     protected final InteractiveCanvas canvas;
     private volatile int approved = 0;
     private boolean admin = false;
+    private ClientGUI gui;
 
     /**
      * Creates a new ICM that communicates with the remote whiteboard, and manages the display of the canvas.
@@ -41,39 +41,36 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
      * @param height
      * @throws Exception
      */
-    public InteractiveCanvasManager(String rmiReference, UserIdentity uid, int width, int height) throws Exception {
+    public InteractiveCanvasManager(String rmiReference, UserIdentity uid, int width, int height, ClientGUI gui) throws Exception {
 
         this.uid = uid;
-        this.rmiReference = rmiReference;
+        this.gui = gui;
 
         //FIXME: expand beyond localhost
         String hostname = "localhost";
 
         try {
             Naming.rebind("//"+hostname+"/" + uid.username, this);
-            System.out.println("Client bound in registry!");
         } catch (RemoteException | MalformedURLException e) {
-            System.out.println("RMI error");
-            throw new Exception();
+            throw new Exception("Error RMI binding self");
         }
 
-        this.remoteWhiteboard = (IRemoteWhiteboard) Naming.lookup(rmiReference);
+        try {
+            this.remoteWhiteboard = (IRemoteWhiteboard) Naming.lookup(rmiReference);
+        } catch (Exception e) {
+            throw new Exception("Couldn't find that whiteboard");
+        }
 
         if (!remoteWhiteboard.startWhiteboard(uid)) {
             if (!remoteWhiteboard.joinWhiteboard(uid)) {
-                System.out.println("Join failed");
-                throw new Exception();
+                throw new Exception("Join rejected");
             }
         } else {
             admin = true;
         }
-        System.out.println("Join success");
 
         this.canvas = new InteractiveCanvas(width, height, uid.username, this);
         canvas.drawings = remoteWhiteboard.getCanvas(uid);
-        System.out.println("Drawings get success");
-
-
     }
 
     /**
@@ -161,6 +158,33 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
 
         d.dispose();
         return approved == 1;
+    }
+
+    /**
+     * Called by the GUI when the disconnect button is pressed. Tells the server the client is d/cing
+     */
+    public void notifyDisconnect() {
+        try {
+            remoteWhiteboard.notifyDisconnect(uid);
+        } catch (RemoteException ignored) {}
+    }
+
+    /**
+     * Called by the server to notify this client of a new user joining the server. Updates the GUI
+     * @param username
+     * @throws RemoteException
+     */
+    public void notifyUserJoin(String username) throws RemoteException {
+
+        gui.addClientUser(username);
+    }
+
+    /**
+     * Called by the server to notify this client that a user has left the server
+     * @return
+     */
+    public void notifyUserLeft(String username) throws RemoteException {
+        gui.rmClientUser(username);
     }
 
     boolean isAdmin() {

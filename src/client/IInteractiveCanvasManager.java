@@ -18,4 +18,8 @@ public interface IInteractiveCanvasManager extends Remote {
 
     boolean approveUser(UserIdentity uid) throws RemoteException;
 
+    void notifyUserJoin(String username) throws RemoteException;
+
+    void notifyUserLeft(String username) throws RemoteException;
+
 }

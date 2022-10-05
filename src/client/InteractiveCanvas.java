@@ -117,6 +117,7 @@ public class InteractiveCanvas extends Canvas {
             }
             if (isFreeDrawing) {
                 pendingFreeDrawing.timestamp = System.currentTimeMillis();
+                pendingFreeDrawing.optimise(5);
                 manager.sendDrawing(pendingFreeDrawing);
                 isFreeDrawing = false;
                 return;
@@ -156,13 +157,13 @@ public class InteractiveCanvas extends Canvas {
 
             if (isFreeDrawing) {
                 pendingFreeDrawing.addPoint(e.getX(), e.getY());
-                InteractiveCanvas.this.repaint();
+                InteractiveCanvas.this.repaint(100);
             }
 
             if (isDrawing && !toolSelected.equals("Free Line")) {
                 pendingDrawing.endx = e.getX();
                 pendingDrawing.endy = e.getY();
-                InteractiveCanvas.this.repaint();
+                InteractiveCanvas.this.repaint(100);
             }
         }
 

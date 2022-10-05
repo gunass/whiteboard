@@ -22,4 +22,6 @@ public interface IRemoteWhiteboard extends Remote {
     public void clearCanvas(UserIdentity uid) throws RemoteException;
     public ArrayList<UserIdentity> getUsers(UserIdentity uid) throws RemoteException;
 
+    public void notifyDisconnect(UserIdentity uid) throws RemoteException;
+
 }
