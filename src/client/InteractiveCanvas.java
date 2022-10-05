@@ -9,7 +9,10 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
 import java.util.ArrayList;
+import java.util.Stack;
 
 /**
  * Interactive canvas object responsible for drawing and displaying all shapes.
@@ -19,15 +22,27 @@ import java.util.ArrayList;
  */
 public class InteractiveCanvas extends Canvas {
 
-    ArrayList<Drawing> drawings;
+    // Stack of complete drawings not yet drawn to the canvas flat
+    Stack<Drawing> drawings;
+
+    // Tool selected in the GUI
     String toolSelected = "Free Line";
+    // Colour selected in the GUI
     Color colourSelected;
+    // Enabled when the user is drawing a Shape (i.e. not a FreeLine or Text)
     boolean isDrawing;
+    // Enabled when the user is drawing a FreeLine
     boolean isFreeDrawing;
+    // A raw representation of the mouse path when drawing FreeLine
     FreeLine pendingFreeDrawing;
+    // The pending representation of the Shape being drawn
     Drawing pendingDrawing;
+    // The user's name (used to sign drawings)
     String username;
+    // The ICM
     InteractiveCanvasManager manager;
+    // The image file that stores all the drawn drawings
+    BufferedImage canvasFlat;
 
 
     /**
@@ -44,6 +59,7 @@ public class InteractiveCanvas extends Canvas {
         this.addMouseListener(new InteractiveCanvas.CanvasMouseListener());
         this.addMouseMotionListener(new InteractiveCanvas.CanvasMouseMotionListener());
         this.username = username;
+        this.canvasFlat = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         System.out.println("Canvas created successfully");
     }
 
@@ -53,10 +69,16 @@ public class InteractiveCanvas extends Canvas {
      */
     @Override
     public void paint(Graphics g) {
-        for (Drawing d : drawings) {
-            g.setColor(d.colour);
-            d.drawToGraphics(g);
+
+        // Paint all new drawings to the canvas flat
+        while (!drawings.isEmpty()) {
+            Drawing d = drawings.pop();
+            d.drawToGraphics(canvasFlat.getGraphics());
         }
+
+        g.drawImage(canvasFlat, 0, 0, this);
+
+        // Draw the pending drawing to the canvas flat (live!)
         if (isDrawing) {
             g.setColor(pendingDrawing.colour);
             pendingDrawing.drawToGraphics(g);
@@ -68,7 +90,7 @@ public class InteractiveCanvas extends Canvas {
     }
 
     /**
-     * Listens for clicks and releases (to draw shapes, or to active a FreeLine drawing)
+     * Listens for clicks and releases (to draw)
      */
     private class CanvasMouseListener implements MouseListener {
 
@@ -111,12 +133,14 @@ public class InteractiveCanvas extends Canvas {
             }
         }
 
+        // If drawing, mouse release => finish drawing. Sends to server instantly
         public void mouseReleased(MouseEvent e) {
             if (toolSelected.equals("Text")) {
                 return;
             }
             if (isFreeDrawing) {
                 pendingFreeDrawing.timestamp = System.currentTimeMillis();
+                // De-interpolate the drawing to minimise object size (4 bytes per point!)
                 pendingFreeDrawing.optimise(5);
                 manager.sendDrawing(pendingFreeDrawing);
                 isFreeDrawing = false;
@@ -137,8 +161,10 @@ public class InteractiveCanvas extends Canvas {
 
         }
 
+        // If mouse exits, stop drawing
+        // Note that this has no effect on FreeLines
         public void mouseExited(MouseEvent e) {
-            isDrawing = false;
+            //isDrawing = false;
         }
 
     }
@@ -156,14 +182,14 @@ public class InteractiveCanvas extends Canvas {
         public void mouseDragged(MouseEvent e) {
 
             if (isFreeDrawing) {
-                pendingFreeDrawing.addPoint(e.getX(), e.getY());
-                InteractiveCanvas.this.repaint(100);
+                pendingFreeDrawing.addPoint((short) e.getX(), (short) e.getY());
+                InteractiveCanvas.this.repaint();
             }
 
             if (isDrawing && !toolSelected.equals("Free Line")) {
                 pendingDrawing.endx = e.getX();
                 pendingDrawing.endy = e.getY();
-                InteractiveCanvas.this.repaint(100);
+                InteractiveCanvas.this.repaint();
             }
         }
 

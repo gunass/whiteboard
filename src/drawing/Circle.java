@@ -15,6 +15,7 @@ public class Circle extends Shape {
 
     @Override
     public void drawToGraphics(Graphics g) {
+        g.setColor(this.colour);
         g.fillOval(getX(), getY(), getWidth(), getHeight());
     }
 

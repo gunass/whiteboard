@@ -8,12 +8,14 @@ import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -70,7 +72,8 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
         }
 
         this.canvas = new InteractiveCanvas(width, height, uid.username, this);
-        canvas.drawings = remoteWhiteboard.getCanvas(uid);
+        canvas.drawings = new Stack<>();
+        canvas.drawings.addAll(remoteWhiteboard.getCanvas(uid));
     }
 
     /**
@@ -88,7 +91,8 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
      * @throws RemoteException
      */
     public void clearCanvas() throws RemoteException {
-        canvas.drawings = new ArrayList<>();
+        canvas.drawings = new Stack<>();
+        canvas.canvasFlat = new BufferedImage(canvas.canvasFlat.getWidth(), canvas.canvasFlat.getHeight(), BufferedImage.TYPE_INT_ARGB);
         canvas.repaint();
     }
 

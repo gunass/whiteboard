@@ -14,6 +14,7 @@ public class Line extends Drawing {
 
     @Override
     public void drawToGraphics(Graphics g) {
+        g.setColor(this.colour);
         g.drawLine(startx, starty, endx, endy);
     }
 }
