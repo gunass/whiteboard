@@ -8,9 +8,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+
+import static java.awt.Image.SCALE_FAST;
 
 /**
  * Default graphical user interface for the whiteboard application. Begins with a login screen which prompts
@@ -122,7 +126,9 @@ public class ClientGUI {
             });
 
             // A button and a panel to select and display the pen colour
-            colourButton = new JButton("Colour");
+            ImageIcon colourIcon = new ImageIcon("src/client/icons/borderpainter.png");
+            colourButton = new JButton(colourIcon);
+            System.out.println(System.getProperty("user.dir"));
             colourPanel = new JPanel();
             colourPanel.setOpaque(true);
             colourPanel.setBackground(_DEFAULT_COLOUR);
@@ -134,13 +140,14 @@ public class ClientGUI {
                     }
             );
 
-            clearButton = new JButton("Clear");
+            ImageIcon clearIcon = new ImageIcon("src/client/icons/bqm-remove.png");
+            clearButton = new JButton(clearIcon);
             clearButton.addActionListener(e -> {
                 canvasMgr.requestClearCanvas();
             });
 
-            disconnectButton = new JButton("Disconnect");
-            disconnectButton.setEnabled(false);
+            ImageIcon disconnectIcon = new ImageIcon("src/client/icons/gtk-disconnect.png");
+            disconnectButton = new JButton(disconnectIcon);
             disconnectButton.addActionListener(e -> {
                 canvasMgr.notifyDisconnect();
                 mainWindow.remove(canvasMgr.canvas);
@@ -261,7 +268,7 @@ public class ClientGUI {
                 drawables.setToolTipText("Select the tool to draw with");
                 colourButton.setToolTipText("Select the colour to draw with");
                 clearButton.setToolTipText(canvasMgr.isAdmin() ? "Clear the canvas" : "Administrator only");
-                disconnectButton.setText(canvasMgr.isAdmin() ? "Close" : disconnectButton.getText());
+                clearButton.setEnabled(canvasMgr.isAdmin());
                 disconnectButton.setToolTipText(canvasMgr.isAdmin() ? "Close the server" : "Disconnect from server");
 
             } catch (NullPointerException g) {
