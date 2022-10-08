@@ -24,4 +24,6 @@ public interface IRemoteWhiteboard extends Remote {
 
     public void notifyDisconnect(UserIdentity uid) throws RemoteException;
 
+    public void sendMessage(UserIdentity uid, String message) throws RemoteException;
+
 }

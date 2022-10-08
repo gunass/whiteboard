@@ -22,4 +22,6 @@ public interface IInteractiveCanvasManager extends Remote {
 
     void notifyUserLeft(String username) throws RemoteException;
 
+    void newChatMessage(String username, String message) throws RemoteException;
+
 }

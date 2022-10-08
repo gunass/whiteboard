@@ -194,6 +194,14 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
         return false;
     }
 
+    public void sendMessage(UserIdentity uid, String message) throws RemoteException {
+        if (isUser(uid)) {
+            for (IInteractiveCanvasManager c : clients) {
+                c.newChatMessage(uid.username, message);
+            }
+        }
+    }
+
 
 
 }

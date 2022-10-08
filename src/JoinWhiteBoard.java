@@ -13,7 +13,6 @@ public class JoinWhiteBoard {
 
         ClientGUI cgui = new ClientGUI();
 
-
     }
 
 }

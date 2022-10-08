@@ -195,4 +195,14 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
         return admin;
     }
 
+    public void newChatMessage(String username, String message) throws RemoteException {
+        gui.postToChat(username, message);
+    }
+
+    public void sendToChat(String message) {
+        try {
+            remoteWhiteboard.sendMessage(uid, message);
+        } catch (RemoteException ignored) {}
+    }
+
 }

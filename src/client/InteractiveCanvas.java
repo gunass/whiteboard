@@ -103,6 +103,9 @@ public class InteractiveCanvas extends Canvas {
 
             if (toolSelected.equals("Text")) {
 
+
+
+
                 return;
             } else if (toolSelected.equals("Free Line")) {
                 pendingFreeDrawing = new drawing.FreeLine(username, 0, colourSelected);
@@ -192,9 +195,8 @@ public class InteractiveCanvas extends Canvas {
                 InteractiveCanvas.this.repaint();
             }
         }
-
-
     }
+
 
 
 

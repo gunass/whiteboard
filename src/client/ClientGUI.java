@@ -3,6 +3,7 @@ package client;
 import util.UserIdentity;
 
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -46,11 +47,16 @@ public class ClientGUI {
     private DefaultListModel<String> usersListModel = new DefaultListModel<>();
     private JList<String> usersList;
     private JLabel usersListLabel;
+    private StyledDocument chatDocument = new DefaultStyledDocument();
+    private SimpleAttributeSet usernameAttributes = new SimpleAttributeSet();
+    private SimpleAttributeSet chatTextAttributes = new SimpleAttributeSet();
+    private JTextPane chatBox;
+    private JScrollPane chatBoxScrollPane;
+    private JTextField chatEntry;
     private JButton colourButton;
     private JPanel colourPanel;
     private JButton clearButton;
 
-    private Socket socket;
 
     private InteractiveCanvasManager canvasMgr;
     private ToolBar toolbar;
@@ -70,18 +76,19 @@ public class ClientGUI {
         this.usersListPanel = new UsersList();
 
         toolbar.setBounds(0, _MENU_AREA_ROOT_Y, _CANVAS_WIDTH, _MENU_AREA_HEIGHT);
-        usersListPanel.setBounds(_CANVAS_WIDTH + _BORDER, 0, _USERS_DISPLAY_WIDTH, _WINDOW_HEIGHT);
+
+        usersListPanel.setBounds(_CANVAS_WIDTH + 2*_BORDER, 0, _USERS_DISPLAY_WIDTH, _USERS_DISPLAY_HEIGHT);
 
         mainWindow.add(canvasPanel);
         mainWindow.add(toolbar);
         mainWindow.add(usersListPanel);
 
-        // A list to show the current users in the server
-
-
         mainWindow.setSize(_WINDOW_WIDTH,_WINDOW_HEIGHT);
         mainWindow.setLayout(null);
         mainWindow.setVisible(true);
+
+        usernameAttributes.addAttribute(StyleConstants.CharacterConstants.Bold, Boolean.TRUE);
+
     }
 
     public void addClientUser(String username) {
@@ -99,18 +106,69 @@ public class ClientGUI {
     private class UsersList extends JPanel {
         public UsersList() {
 
-            this.setLayout(new FlowLayout());
+            this.setLayout(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
             usersList = new JList<>(usersListModel);
-            usersList.setFixedCellWidth(_USERS_DISPLAY_WIDTH);
-            usersList.setBounds(0,0,_USERS_DISPLAY_WIDTH, _USERS_DISPLAY_HEIGHT);
             usersListLabel = new JLabel("Active users");
 
-            this.add(usersListLabel);
-            this.add(usersList);
+            // https://www.javaprogrammingforums.com/awt-java-swing/33838-jtextpane-add-text-bottom-upwards.html
+            chatBox = new JTextPane(chatDocument);
+            chatBox.setEditable(false);
+            JPanel chatBoxContainer = new JPanel(new BorderLayout());
+            chatBoxContainer.setBackground(Color.WHITE);
+            chatBoxContainer.add(chatBox, BorderLayout.SOUTH);
+            chatBoxScrollPane = new JScrollPane(chatBoxContainer);
+            chatBoxScrollPane.setBackground(Color.WHITE);
+
+            JLabel chatLabel = new JLabel("Chat: ");
+            chatEntry = new JTextField();
+            chatEntry.addKeyListener(new ChatEnterListener());
+            chatEntry.setEnabled(false);
+
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            //gbc.weightx = 1.0;
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.gridwidth = 4;
+            this.add(usersListLabel, gbc);
+            gbc.gridy = 1;
+            this.add(usersList, gbc);
+            gbc.gridy = 2;
+            this.add(new JSeparator(), gbc);
+            gbc.gridy = 3;
+            gbc.weighty = 1.0;
+            gbc.fill = GridBagConstraints.BOTH;
+            this.add(chatBoxScrollPane, gbc);
+            gbc.weighty = 0;
+            gbc.gridy = 4;
+            this.add(new JSeparator(), gbc);
+            gbc.gridy = 5;
+            gbc.gridwidth = 1;
+            gbc.fill = GridBagConstraints.WEST;
+            this.add(chatLabel, gbc);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.gridx = 1;
+            gbc.weightx = 1;
+            gbc.gridwidth = 3;
+            this.add(chatEntry, gbc);
+
+            gbc.anchor = GridBagConstraints.PAGE_END;
 
         }
 
     }
+
+    public void postToChat(String username, String message) {
+        // http://www.java2s.com/Tutorial/Java/0240__Swing/SimpleAttributeBoldItalic.htm
+        try {
+            chatDocument.insertString(chatDocument.getLength(), username + ": ", usernameAttributes);
+            chatDocument.insertString(chatDocument.getLength(), message + "\n", chatTextAttributes);
+
+            chatBox.setCaretPosition(chatBox.getText().length());
+        } catch (Exception ignored) {}
+    }
+
 
     /**
      * A bar, for tools
@@ -126,7 +184,7 @@ public class ClientGUI {
             });
 
             // A button and a panel to select and display the pen colour
-            ImageIcon colourIcon = new ImageIcon("src/client/icons/borderpainter.png");
+            ImageIcon colourIcon = new ImageIcon("borderpainter.png");
             colourButton = new JButton(colourIcon);
             System.out.println(System.getProperty("user.dir"));
             colourPanel = new JPanel();
@@ -140,13 +198,13 @@ public class ClientGUI {
                     }
             );
 
-            ImageIcon clearIcon = new ImageIcon("src/client/icons/bqm-remove.png");
+            ImageIcon clearIcon = new ImageIcon("bqm-remove.png");
             clearButton = new JButton(clearIcon);
             clearButton.addActionListener(e -> {
                 canvasMgr.requestClearCanvas();
             });
 
-            ImageIcon disconnectIcon = new ImageIcon("src/client/icons/gtk-disconnect.png");
+            ImageIcon disconnectIcon = new ImageIcon("gtk-disconnect.png");
             disconnectButton = new JButton(disconnectIcon);
             disconnectButton.addActionListener(e -> {
                 canvasMgr.notifyDisconnect();
@@ -155,6 +213,7 @@ public class ClientGUI {
                 mainWindow.add(ClientGUI.this.canvasPanel);
                 usersListModel.clear();
                 this.enableAll(false);
+                chatEntry.setEnabled(false);
             });
 
             this.enableAll(false);
@@ -264,6 +323,7 @@ public class ClientGUI {
                 clearButton.setEnabled(canvasMgr.isAdmin());
 
                 toolbar.enableAll(true);
+                chatEntry.setEnabled(true);
 
                 drawables.setToolTipText("Select the tool to draw with");
                 colourButton.setToolTipText("Select the colour to draw with");
@@ -301,6 +361,26 @@ public class ClientGUI {
             }
         }
         public void keyReleased(KeyEvent e) {}
+    }
+
+    class ChatEnterListener implements KeyListener {
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+
+        }
+
+        public void keyPressed(KeyEvent e) {
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                canvasMgr.sendToChat(chatEntry.getText());
+                chatEntry.setText("");
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+
+        }
     }
 
 }
