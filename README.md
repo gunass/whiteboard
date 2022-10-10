@@ -20,12 +20,13 @@ Once connected, allows the user to choose from a range of drawing tools
 (free line, straight line, rectangle, circle, triangle) and colours (256) and make changes directly 
 onto the canvas by mouse drawing.
 
+Users on the server can communicate with each other via text chat. 
+
 Administrators can use the "clear" button to clear the current canvas. 
 
 ### wishlist
 
 - **Text drawing**
-- Text chat
 - Allow the admin to kick a user
 - Save the canvas as a .png and open it later
 - Custom or at least extended canvas sizing (currently locked to 500x500 - 4:3 or 16:9 would be cool)
