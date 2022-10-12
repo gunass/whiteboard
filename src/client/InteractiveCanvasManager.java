@@ -9,6 +9,7 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
@@ -30,7 +31,7 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
 
     private final UserIdentity uid;
     private final IRemoteWhiteboard remoteWhiteboard;
-    protected final InteractiveCanvas canvas;
+    protected InteractiveCanvas canvas;
     private volatile int approved = 0;
     private boolean admin = false;
     private ClientGUI gui;
@@ -205,4 +206,30 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
         } catch (RemoteException ignored) {}
     }
 
+    public void download(){
+        try {
+            ObjectOutputStream write = new ObjectOutputStream(new FileOutputStream("test.txt"));
+            write.writeObject(canvas);
+            write.close();
+        } catch (FileNotFoundException e){
+
+        } catch (IOException e){
+
+        }
+    }
+
+    public void upload() {
+        try {
+            ObjectInputStream read = new ObjectInputStream(new FileInputStream("test.txt"));
+            canvas = (InteractiveCanvas) read.readObject();
+            read.close();
+            canvas.repaint();
+        } catch (FileNotFoundException e) {
+
+        } catch (IOException e){
+
+        } catch (ClassNotFoundException e){
+
+        }
+    }
 }

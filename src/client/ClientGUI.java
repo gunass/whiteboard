@@ -56,6 +56,8 @@ public class ClientGUI {
     private JButton colourButton;
     private JPanel colourPanel;
     private JButton clearButton;
+    private JButton uploadButton;
+    private JButton downloadButton;
 
 
     private InteractiveCanvasManager canvasMgr;
@@ -216,6 +218,18 @@ public class ClientGUI {
                 chatEntry.setEnabled(false);
             });
 
+            ImageIcon uploadIcon = new ImageIcon("upload.png");
+            uploadButton = new JButton(uploadIcon);
+            uploadButton.addActionListener(e -> {
+                canvasMgr.upload();
+            });
+
+            ImageIcon downloadIcon = new ImageIcon("download.png");
+            downloadButton = new JButton(downloadIcon);
+            downloadButton.addActionListener(e -> {
+                canvasMgr.download();
+            });
+
             this.enableAll(false);
 
             this.add(drawables);
@@ -223,6 +237,8 @@ public class ClientGUI {
             this.add(colourPanel);
             this.add(clearButton);
             this.add(disconnectButton);
+            this.add(uploadButton);
+            this.add(downloadButton);
         }
 
         public void enableAll(boolean v) {
@@ -230,7 +246,8 @@ public class ClientGUI {
             colourButton.setEnabled(v);
             clearButton.setEnabled(v);
             disconnectButton.setEnabled(v);
-
+            uploadButton.setEnabled(v);
+            downloadButton.setEnabled(v);
         }
 
     }
@@ -330,6 +347,8 @@ public class ClientGUI {
                 clearButton.setToolTipText(canvasMgr.isAdmin() ? "Clear the canvas" : "Administrator only");
                 clearButton.setEnabled(canvasMgr.isAdmin());
                 disconnectButton.setToolTipText(canvasMgr.isAdmin() ? "Close the server" : "Disconnect from server");
+                uploadButton.setToolTipText("Upload Canvas");
+                downloadButton.setToolTipText("Download Canvas");
 
             } catch (NullPointerException g) {
                 passwordField.setText("");

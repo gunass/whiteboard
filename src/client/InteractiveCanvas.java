@@ -12,6 +12,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.Stack;
 
 /**
@@ -20,7 +21,7 @@ import java.util.Stack;
  * rendered. When the drawing is finished (e.g. mouse released) it is sent to the server.
  * @author Alex Epstein
  */
-public class InteractiveCanvas extends Canvas {
+public class InteractiveCanvas extends Canvas implements Serializable{
 
     // Stack of complete drawings not yet drawn to the canvas flat
     Stack<Drawing> drawings;
