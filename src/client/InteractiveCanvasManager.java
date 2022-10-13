@@ -208,11 +208,10 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
 
     /**
      * Downloads the array of drawings stored at the server, and serialises them into a .canvas file
-     * 
      */
-    public void download(){
+    public void download(File file){
         try {
-            ObjectOutputStream write = new ObjectOutputStream(new FileOutputStream("test.canvas"));
+            ObjectOutputStream write = new ObjectOutputStream(new FileOutputStream(file));
             write.writeObject(remoteWhiteboard.getCanvas(uid));
             write.close();
         } catch (Exception e) {
@@ -222,10 +221,11 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
 
     /**
      * Reads the stored .canvas file and sends all drawings to the server
+     * MUST BE ADMIN!
      */
-    public void upload() {
+    public void upload(File file) {
         try {
-            ObjectInputStream read = new ObjectInputStream(new FileInputStream("test.canvas"));
+            ObjectInputStream read = new ObjectInputStream(new FileInputStream(file));
             ArrayList<Drawing> drawings;
             try {
                 drawings = (ArrayList<Drawing>) read.readObject();

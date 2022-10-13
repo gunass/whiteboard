@@ -88,11 +88,18 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     public boolean joinWhiteboard(UserIdentity uid) throws RemoteException {
         if (approveUser(uid)) {
             try {
-                clients.add((IInteractiveCanvasManager) Naming.lookup( "//" + hostname + "/" + uid.username));
-                users.add(uid);
-                for (IInteractiveCanvasManager c : clients) {
-                    c.notifyUserJoin(uid.username);
+                IInteractiveCanvasManager c = (IInteractiveCanvasManager) Naming.lookup( "//" + hostname + "/" + uid.username);
+                for (int i = 0; i < clients.size(); i++) {
+                    // Notify other clients of the new user
+                    clients.get(i).notifyUserJoin(uid.username);
+                    // Notify new user of other clients
+                    c.notifyUserJoin(users.get(i).username);
                 }
+                // Notify user that it, itself, has joined
+                c.notifyUserJoin(uid.username);
+                // Add uid and ICM to the user mgmt
+                users.add(uid);
+                clients.add(c);
             } catch (NotBoundException | MalformedURLException | ClassCastException e) {
                 return false;
             }

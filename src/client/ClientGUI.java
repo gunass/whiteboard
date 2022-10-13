@@ -3,6 +3,7 @@ package client;
 import util.UserIdentity;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -33,8 +34,9 @@ public class ClientGUI {
     private final int _USERS_DISPLAY_WIDTH = 200;
     private final int _USERS_DISPLAY_HEIGHT = _CANVAS_HEIGHT;
     private final int _WINDOW_WIDTH = _CANVAS_WIDTH + 3*_BORDER + _USERS_DISPLAY_WIDTH;
-    private final int _WINDOW_HEIGHT = _CANVAS_HEIGHT + 3*_BORDER + _MENU_AREA_HEIGHT;
+    private final int _WINDOW_HEIGHT = _CANVAS_HEIGHT + 3*_BORDER + _MENU_AREA_HEIGHT + _TEXT_HEIGHT;
     private final int _MENU_AREA_ROOT_Y = _CANVAS_HEIGHT;
+
     private final String[] toolsAvailable = {"Free Line", "Line", "Triangle", "Rectangle", "Circle", "Text"};
     private JButton disconnectButton;
     private int menuNextX = _BORDER;
@@ -63,6 +65,8 @@ public class ClientGUI {
     private InteractiveCanvasManager canvasMgr;
     private ToolBar toolbar;
     private UsersList usersListPanel;
+    private FileMenuBar fileMenuBar;
+    private File workingFile;
 
     /**
      * Creates a client GUI with all the default features (no refunds)
@@ -76,20 +80,99 @@ public class ClientGUI {
         this.canvasPanel = new ConnectionPanel();
         this.toolbar = new ToolBar();
         this.usersListPanel = new UsersList();
+        this.fileMenuBar = new FileMenuBar();
 
+        fileMenuBar.setEnables(false, false, false);
+
+        canvasPanel.setBounds(0, 0, _CANVAS_WIDTH, _CANVAS_HEIGHT);
         toolbar.setBounds(0, _MENU_AREA_ROOT_Y, _CANVAS_WIDTH, _MENU_AREA_HEIGHT);
-
         usersListPanel.setBounds(_CANVAS_WIDTH + 2*_BORDER, 0, _USERS_DISPLAY_WIDTH, _USERS_DISPLAY_HEIGHT);
 
         mainWindow.add(canvasPanel);
         mainWindow.add(toolbar);
         mainWindow.add(usersListPanel);
+        mainWindow.setJMenuBar(fileMenuBar);
 
         mainWindow.setSize(_WINDOW_WIDTH,_WINDOW_HEIGHT);
         mainWindow.setLayout(null);
         mainWindow.setVisible(true);
 
         usernameAttributes.addAttribute(StyleConstants.CharacterConstants.Bold, Boolean.TRUE);
+
+    }
+
+    public class FileMenuBar extends JMenuBar {
+        JMenuItem open;
+        JMenuItem save;
+        JMenuItem saveAs;
+        public FileMenuBar() {
+
+            JMenu fileMenu = new JMenu("File");
+
+            open = new JMenuItem("Open...");
+            save = new JMenuItem("Save");
+            saveAs = new JMenuItem("Save...");
+
+            open.addActionListener(e -> {
+                //https://www.javatpoint.com/java-jfilechooser
+                JFileChooser chooser = new JFileChooser();
+                chooser.setDialogTitle("Open file...");
+                chooser.setFileFilter(new FileNameExtensionFilter(null, "canvas"));
+                int i = chooser.showOpenDialog(this);
+                if (i == JFileChooser.APPROVE_OPTION) {
+                    File selected = chooser.getSelectedFile();
+                    if (!selected.getName().endsWith(".canvas")) {
+                        System.out.println("File selected is not a .canvas file");
+                        return;
+                    } else {
+                        workingFile = selected;
+                        canvasMgr.upload(selected);
+                        mainWindow.setTitle(selected.getName());
+                        setEnables(true, true, true);
+                    }
+                }
+            });
+
+            save.addActionListener(e -> {
+                canvasMgr.download(workingFile);
+            });
+
+            saveAs.addActionListener(e -> {
+                JFileChooser chooser = new JFileChooser();
+                chooser.setDialogTitle("Save canvas as...");
+                chooser.setFileFilter(new FileNameExtensionFilter(null, "canvas"));
+                chooser.setDialogType(JFileChooser.SAVE_DIALOG);
+                int i = chooser.showSaveDialog(this);
+                if (i == JFileChooser.APPROVE_OPTION) {
+                    File newSave = chooser.getSelectedFile();
+                    if (!newSave.getName().endsWith(".canvas")) {
+                        System.out.println("Must save with .canvas extension");
+                    } else {
+                        workingFile = newSave;
+                        canvasMgr.download(newSave);
+                        mainWindow.setTitle(newSave.getName());
+                        setEnables(true, true, true);
+                    }
+                }
+
+            });
+
+            fileMenu.add(open);
+            fileMenu.add(save);
+            fileMenu.add(saveAs);
+
+            this.add(fileMenu);
+
+        }
+
+
+        public void setEnables(boolean bOpen, boolean bSave, boolean bSaveAs) {
+            // If not admin, force "open" to be false
+            open.setEnabled(bOpen && canvasMgr != null && canvasMgr.isAdmin());
+            save.setEnabled(bSave);
+            saveAs.setEnabled(bSaveAs);
+            this.repaint();
+        }
 
     }
 
@@ -216,18 +299,7 @@ public class ClientGUI {
                 usersListModel.clear();
                 this.enableAll(false);
                 chatEntry.setEnabled(false);
-            });
-
-            ImageIcon uploadIcon = new ImageIcon("upload.png");
-            uploadButton = new JButton(uploadIcon);
-            uploadButton.addActionListener(e -> {
-                canvasMgr.upload();
-            });
-
-            ImageIcon downloadIcon = new ImageIcon("download.png");
-            downloadButton = new JButton(downloadIcon);
-            downloadButton.addActionListener(e -> {
-                canvasMgr.download();
+                fileMenuBar.setEnables(false, false, false);
             });
 
             this.enableAll(false);
@@ -237,8 +309,6 @@ public class ClientGUI {
             this.add(colourPanel);
             this.add(clearButton);
             this.add(disconnectButton);
-            this.add(uploadButton);
-            this.add(downloadButton);
         }
 
         public void enableAll(boolean v) {
@@ -246,8 +316,6 @@ public class ClientGUI {
             colourButton.setEnabled(v);
             clearButton.setEnabled(v);
             disconnectButton.setEnabled(v);
-            uploadButton.setEnabled(v);
-            downloadButton.setEnabled(v);
         }
 
     }
@@ -260,7 +328,7 @@ public class ClientGUI {
 
         public ConnectionPanel() {
             this.setLayout(null);
-            this.setBounds(_BORDER,_BORDER,_CANVAS_WIDTH,_CANVAS_HEIGHT);
+            this.setBounds(0, 0, _CANVAS_WIDTH, _CANVAS_HEIGHT);
 
             // Some brief text
             JTextArea connectionTextArea = new JTextArea("Connect to server:");
@@ -337,6 +405,7 @@ public class ClientGUI {
                 canvasMgr.canvas.toolSelected = _DEFAULT_TOOL;
                 mainWindow.remove(canvasPanel);
                 mainWindow.add(canvasMgr.canvas);
+                canvasMgr.canvas.setBounds(0, 0, _CANVAS_WIDTH, _CANVAS_HEIGHT);
                 clearButton.setEnabled(canvasMgr.isAdmin());
 
                 toolbar.enableAll(true);
@@ -347,8 +416,8 @@ public class ClientGUI {
                 clearButton.setToolTipText(canvasMgr.isAdmin() ? "Clear the canvas" : "Administrator only");
                 clearButton.setEnabled(canvasMgr.isAdmin());
                 disconnectButton.setToolTipText(canvasMgr.isAdmin() ? "Close the server" : "Disconnect from server");
-                uploadButton.setToolTipText("Upload Canvas");
-                downloadButton.setToolTipText("Download Canvas");
+
+                fileMenuBar.setEnables(true, false, true);
 
             } catch (NullPointerException g) {
                 passwordField.setText("");
