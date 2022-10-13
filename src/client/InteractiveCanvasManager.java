@@ -49,7 +49,7 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
         this.uid = uid;
         this.gui = gui;
 
-        //FIXME: expand beyond localhost
+        //FIXME: expand beyond localhost?
         String hostname = "localhost";
 
         try {

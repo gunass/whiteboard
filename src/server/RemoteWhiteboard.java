@@ -72,6 +72,7 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
                 users.add(uid);
                 adminClient.notifyUserJoin(uid.username);
             } catch (NotBoundException | MalformedURLException | ClassCastException e) {
+                admin = null;
                 return false;
             }
             return true;
@@ -117,6 +118,12 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
         return adminClient.approveUser(uid);
     }
 
+    /**
+     * Called by a remote client when that client voluntarily disconnects from the server.
+     * Removes them from the users list and notifies the other clients that they have left
+     * @param uid
+     * @throws RemoteException
+     */
     public void notifyDisconnect(UserIdentity uid) throws RemoteException {
         if (!isUser(uid)) {
             return;

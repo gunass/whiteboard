@@ -58,8 +58,6 @@ public class ClientGUI {
     private JButton colourButton;
     private JPanel colourPanel;
     private JButton clearButton;
-    private JButton uploadButton;
-    private JButton downloadButton;
 
 
     private InteractiveCanvasManager canvasMgr;
@@ -101,6 +99,10 @@ public class ClientGUI {
 
     }
 
+    /**
+     * A menubar with a "File" menu embedded.
+     * @author Alex Epstein
+     */
     public class FileMenuBar extends JMenuBar {
         JMenuItem open;
         JMenuItem save;
@@ -188,6 +190,14 @@ public class ClientGUI {
         }
     }
 
+    /**
+     * A reactively-sized user list interface constructed mostly through trial and error.
+     * Includes the active users view, chat feed, and chat field/button
+     * The active users view takes up as much y space as there are users in the server
+     * The chat field/button takes up constant y space
+     * The chat feed fills up the rest of the y space between the two
+     * @author Alex Epstein
+     */
     private class UsersList extends JPanel {
         public UsersList() {
 
@@ -247,9 +257,10 @@ public class ClientGUI {
     public void postToChat(String username, String message) {
         // http://www.java2s.com/Tutorial/Java/0240__Swing/SimpleAttributeBoldItalic.htm
         try {
+            // Insert username in bold, and text in standard face
             chatDocument.insertString(chatDocument.getLength(), username + ": ", usernameAttributes);
             chatDocument.insertString(chatDocument.getLength(), message + "\n", chatTextAttributes);
-
+            // Scroll to bottom of the text by default (simulates a bottom-up feed)
             chatBox.setCaretPosition(chatBox.getText().length());
         } catch (Exception ignored) {}
     }
@@ -292,6 +303,8 @@ public class ClientGUI {
             ImageIcon disconnectIcon = new ImageIcon("gtk-disconnect.png");
             disconnectButton = new JButton(disconnectIcon);
             disconnectButton.addActionListener(e -> {
+                // On disconnect, delete the canvas, disable the relevant buttons,
+                // and reinstantiate a ConnectionPanel in the GUI
                 canvasMgr.notifyDisconnect();
                 mainWindow.remove(canvasMgr.canvas);
                 ClientGUI.this.canvasPanel = new ConnectionPanel();
@@ -381,7 +394,8 @@ public class ClientGUI {
 
     /**
      * Listens to the "connect" button, and if connect is successful, deletes the ConnectionPanel and replaces it
-     * with a blank canvas. During the action event handling, the InteractiveCanvasManager is spawned.
+     * with a blank canvas. During the action event handling, the InteractiveCanvasManager, and therefore the
+     * InteractiveCanvas, is spawned.
      * @author Alex Epstein
      */
     class ConnectButtonListener implements ActionListener {
