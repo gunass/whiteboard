@@ -6,6 +6,7 @@ import util.UserIdentity;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Interface defining interactions from client->server, including membership activities, retrieving data,
@@ -19,6 +20,7 @@ public interface IRemoteWhiteboard extends Remote {
     public ArrayList<Drawing> getCanvas(UserIdentity uid) throws RemoteException;
 
     public void drawToCanvas(UserIdentity uid, Drawing drawing) throws RemoteException;
+    public void drawAllToCanvas(UserIdentity uid, Collection<Drawing> drawings) throws RemoteException;
     public void clearCanvas(UserIdentity uid) throws RemoteException;
     public ArrayList<UserIdentity> getUsers(UserIdentity uid) throws RemoteException;
 

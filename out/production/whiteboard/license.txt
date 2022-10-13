@@ -1,3 +1,0 @@
-These icons were downloaded from https://github.com/L4ki/Aura-Plasma-Themes
-
-The icons are licensed under the GNU General Public License v3.0 which is included in this subdirectory

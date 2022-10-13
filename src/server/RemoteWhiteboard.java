@@ -13,6 +13,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Is a remote object that maintains a canonical array of Drawing objects, and is responsible for server->client
@@ -181,6 +182,19 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     }
 
     /**
+     * A method which draws a collection of drawings to the canvas, avoiding the inefficiencies
+     * of multiple RMI connections
+     * @param uid
+     * @param drawings
+     * @throws RemoteException
+     */
+    public void drawAllToCanvas(UserIdentity uid, Collection<Drawing> drawings) throws RemoteException {
+        for (Drawing d : drawings) {
+            drawToCanvas(uid, d);
+        }
+    }
+
+    /**
      * Tests if a user is present in the list of admin-approved users
      * @param uid
      * @return
@@ -201,7 +215,6 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
             }
         }
     }
-
 
 
 }

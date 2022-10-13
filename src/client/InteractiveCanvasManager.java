@@ -206,24 +206,37 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
         } catch (RemoteException ignored) {}
     }
 
+    /**
+     * Downloads the array of drawings stored at the server, and serialises them into a .canvas file
+     * 
+     */
     public void download(){
         try {
-            ObjectOutputStream write = new ObjectOutputStream(new FileOutputStream("test.txt"));
-            write.writeObject(canvas);
+            ObjectOutputStream write = new ObjectOutputStream(new FileOutputStream("test.canvas"));
+            write.writeObject(remoteWhiteboard.getCanvas(uid));
             write.close();
-        } catch (FileNotFoundException e){
-
-        } catch (IOException e){
-
+        } catch (Exception e) {
+            System.out.println("Saving whiteboard failed!");
         }
     }
 
+    /**
+     * Reads the stored .canvas file and sends all drawings to the server
+     */
     public void upload() {
         try {
-            ObjectInputStream read = new ObjectInputStream(new FileInputStream("test.txt"));
-            canvas = (InteractiveCanvas) read.readObject();
+            ObjectInputStream read = new ObjectInputStream(new FileInputStream("test.canvas"));
+            ArrayList<Drawing> drawings;
+            try {
+                drawings = (ArrayList<Drawing>) read.readObject();
+            } catch (ClassCastException c) {
+                System.out.println("Saved canvas not readable");
+                return;
+            }
             read.close();
-            canvas.repaint();
+            remoteWhiteboard.clearCanvas(uid);
+            remoteWhiteboard.drawAllToCanvas(uid, drawings);
+
         } catch (FileNotFoundException e) {
 
         } catch (IOException e){
