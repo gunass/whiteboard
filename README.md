@@ -14,10 +14,9 @@ client GUI to allow the admin user to access the whiteboard.
 
 ### GUI
 Allows the user to select a username, password, server hostname before connecting to the server.
-This is not considered secure and you should only submit trivial, temporary passwords. 
 
 Once connected, allows the user to choose from a range of drawing tools 
-(free line, straight line, rectangle, circle, triangle) and colours (256) and make changes directly 
+(free line, straight line, rectangle, circle, triangle, text) and colours (256) and make changes directly 
 onto the canvas by mouse drawing.
 
 Users on the server can communicate with each other via text chat. 
@@ -26,9 +25,7 @@ Administrators can use the "clear" button to clear the current canvas.
 
 ### wishlist
 
-- **Text drawing**
 - Allow the admin to kick a user
-- Save the canvas as a .png and open it later
 - Custom or at least extended canvas sizing (currently locked to 500x500 - 4:3 or 16:9 would be cool)
 - Change the width of the pen (currently 1)
 - Enabled shapes to be drawn either filled or outlined (currently filled only)
