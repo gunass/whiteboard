@@ -1,2 +1,4 @@
 /classes/
 /.idea/
+/out/
+*.canvas
