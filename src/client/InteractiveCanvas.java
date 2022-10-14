@@ -63,6 +63,8 @@ public class InteractiveCanvas extends Canvas implements Serializable {
         this.username = username;
         this.canvasFlat = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         System.out.println("Canvas created successfully");
+
+        pendingText = new TextEntryDialog();
     }
 
     /**
@@ -89,13 +91,16 @@ public class InteractiveCanvas extends Canvas implements Serializable {
             g.setColor(pendingFreeDrawing.colour);
             pendingFreeDrawing.drawToGraphics(g);
         }
+
+        if (pendingText.isVisible()) {
+            pendingText.text.drawToGraphics(g);
+        }
     }
 
     public class TextEntryDialog extends JDialog {
 
-        public int x;
-        public int y;
-        private JTextField textEntryField;
+        public JTextField textEntryField;
+        public Text text;
         public TextEntryDialog() {
             setSize(300,50);
             textEntryField = new JTextField();
@@ -104,30 +109,42 @@ public class InteractiveCanvas extends Canvas implements Serializable {
             this.setVisible(false);
         }
 
-        public void submit() {
-            Text text = new Text(username, System.currentTimeMillis(), colourSelected);
+        public void reset(int x, int y) {
+            text = new Text(username, 0, colourSelected);
+            text.setCharArray("");
             text.startx = x;
             text.starty = y;
+            this.setVisible(true);
+        }
+
+        public void submit() {
+            text.timestamp = System.currentTimeMillis();
             text.setCharArray(textEntryField.getText());
             manager.sendDrawing(text);
+            textEntryField.setText("");
+
+            this.setVisible(false);
         }
 
         public class EnterListener implements KeyListener {
 
             @Override
-            public void keyTyped(KeyEvent e) {}
+            public void keyTyped(KeyEvent e) {
+
+            }
 
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     TextEntryDialog.this.submit();
-                    textEntryField.setText("");
-                    TextEntryDialog.this.setVisible(false);
                 }
             }
 
             @Override
-            public void keyReleased(KeyEvent e) {}
+            public void keyReleased(KeyEvent e) {
+                text.setCharArray(textEntryField.getText());
+                InteractiveCanvas.this.repaint();
+            }
         }
     }
 
@@ -140,20 +157,15 @@ public class InteractiveCanvas extends Canvas implements Serializable {
         public void mouseClicked(MouseEvent e) {
 
             if (toolSelected.equals("Text")) {
-                isTyping = true;
-                if (pendingText == null) {
-                    pendingText = new TextEntryDialog();
-                }
-                pendingText.x = e.getX();
-                pendingText.y = e.getY();
-                pendingText.setVisible(true);
+
             }
         }
 
         public void mousePressed(MouseEvent e) {
 
             if (toolSelected.equals("Text")) {
-                return;
+                isTyping = true;
+                pendingText.reset(e.getX(), e.getY());
             } else if (toolSelected.equals("Free Line")) {
                 pendingFreeDrawing = new drawing.FreeLine(username, 0, colourSelected);
                 pendingFreeDrawing.colour = colourSelected;
