@@ -16,8 +16,8 @@ public class Text extends Drawing {
         super(artist, timestamp, color);
     }
 
-    public void setCharArray(char[] chars) {
-        this.chars = chars;
+    public void setCharArray(String string) {
+        this.chars = string.toCharArray();
     }
 
     public void drawToGraphics(Graphics g) {

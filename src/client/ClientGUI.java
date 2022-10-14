@@ -43,7 +43,7 @@ public class ClientGUI {
 
     private final Color _DEFAULT_COLOUR = Color.BLUE;
     private final String _DEFAULT_TOOL = "Free Line";
-    private JFrame mainWindow;
+    protected JFrame mainWindow;
     private JPanel canvasPanel;
     private JComboBox<String> drawables;
     private DefaultListModel<String> usersListModel = new DefaultListModel<>();

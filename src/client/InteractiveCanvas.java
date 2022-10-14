@@ -6,9 +6,7 @@ import drawing.Text;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.util.ArrayList;
@@ -21,7 +19,7 @@ import java.util.Stack;
  * rendered. When the drawing is finished (e.g. mouse released) it is sent to the server.
  * @author Alex Epstein
  */
-public class InteractiveCanvas extends Canvas implements Serializable{
+public class InteractiveCanvas extends Canvas implements Serializable {
 
     // Stack of complete drawings not yet drawn to the canvas flat
     Stack<Drawing> drawings;
@@ -34,11 +32,14 @@ public class InteractiveCanvas extends Canvas implements Serializable{
     boolean isDrawing;
     // Enabled when the user is drawing a FreeLine
     boolean isFreeDrawing;
+    // Enabled when the user is typing
+    boolean isTyping;
     // A raw representation of the mouse path when drawing FreeLine
     FreeLine pendingFreeDrawing;
     // The pending representation of the Shape being drawn
     Drawing pendingDrawing;
     // The user's name (used to sign drawings)
+    TextEntryDialog pendingText;
     String username;
     // The ICM
     InteractiveCanvasManager manager;
@@ -90,6 +91,46 @@ public class InteractiveCanvas extends Canvas implements Serializable{
         }
     }
 
+    public class TextEntryDialog extends JDialog {
+
+        public int x;
+        public int y;
+        private JTextField textEntryField;
+        public TextEntryDialog() {
+            setSize(300,50);
+            textEntryField = new JTextField();
+            textEntryField.addKeyListener(new EnterListener());
+            this.add(textEntryField);
+            this.setVisible(false);
+        }
+
+        public void submit() {
+            Text text = new Text(username, System.currentTimeMillis(), colourSelected);
+            text.startx = x;
+            text.starty = y;
+            text.setCharArray(textEntryField.getText());
+            manager.sendDrawing(text);
+        }
+
+        public class EnterListener implements KeyListener {
+
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    TextEntryDialog.this.submit();
+                    textEntryField.setText("");
+                    TextEntryDialog.this.setVisible(false);
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {}
+        }
+    }
+
     /**
      * Listens for clicks and releases (to draw)
      */
@@ -98,15 +139,20 @@ public class InteractiveCanvas extends Canvas implements Serializable{
         @Override
         public void mouseClicked(MouseEvent e) {
 
+            if (toolSelected.equals("Text")) {
+                isTyping = true;
+                if (pendingText == null) {
+                    pendingText = new TextEntryDialog();
+                }
+                pendingText.x = e.getX();
+                pendingText.y = e.getY();
+                pendingText.setVisible(true);
+            }
         }
 
         public void mousePressed(MouseEvent e) {
 
             if (toolSelected.equals("Text")) {
-
-
-
-
                 return;
             } else if (toolSelected.equals("Free Line")) {
                 pendingFreeDrawing = new drawing.FreeLine(username, 0, colourSelected);

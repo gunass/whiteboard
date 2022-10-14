@@ -34,7 +34,7 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
     protected InteractiveCanvas canvas;
     private volatile int approved = 0;
     private boolean admin = false;
-    private ClientGUI gui;
+    protected ClientGUI gui;
 
     /**
      * Creates a new ICM that communicates with the remote whiteboard, and manages the display of the canvas.
