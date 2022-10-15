@@ -248,7 +248,7 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
 
     public void removeUser(String kickID) {
         try {
-            remoteWhiteboard.removeUser(kickID);
+            remoteWhiteboard.removeUser(uid, kickID);
         } catch (RemoteException ignored) {}
     }
 

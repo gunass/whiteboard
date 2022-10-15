@@ -16,7 +16,6 @@ public class UserIdentity implements Serializable {
     }
 
     public boolean is(UserIdentity u) {
-
         return u.username.equals(this.username) && u.secret.equals(this.secret);
     }
 

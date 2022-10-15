@@ -88,6 +88,14 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
      * @throws RemoteException
      */
     public boolean joinWhiteboard(UserIdentity uid) throws RemoteException {
+
+        for (UserIdentity u : users) {
+            if (uid.username.equals(u.username)) {
+                // No duplicates
+                return false;
+            }
+        }
+
         if (approveUser(uid)) {
             try {
                 IInteractiveCanvasManager c = (IInteractiveCanvasManager) Naming.lookup( "//" + hostname + "/" + uid.username);
@@ -130,14 +138,19 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
             return;
         }
 
+        int j = 0;
+
         for (int i = 0; i < users.size(); i++) {
             if (uid.is(users.get(i))) {
-                users.remove(users.get(i));
-                clients.remove(clients.get(i));
+                j = i;
             } else {
                 clients.get(i).notifyUserLeft(uid.username);
             }
         }
+
+        users.remove(j);
+        clients.remove(j);
+
     }
 
     /**
@@ -231,14 +244,18 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
         }
     }
 
-    public void removeUser(String kickID) throws RemoteException{
-        int i;
-        for (i = 0; i < users.size(); i++) {
-            if (users.get(i).uidFinder(kickID)) {
-                break;
+    public void removeUser(UserIdentity uid, String kickID) throws RemoteException{
+
+        if (uid.is(admin)) {
+            for (int i = 0; i < users.size(); i++) {
+                UserIdentity u = users.get(i);
+                if (u.username.equals(kickID)) {
+                    clients.get(i).reset();
+                    notifyDisconnect(u);
+                    return;
+                }
             }
         }
-        clients.get(i).reset();
     }
 
 }

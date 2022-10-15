@@ -28,5 +28,5 @@ public interface IRemoteWhiteboard extends Remote {
 
     public void sendMessage(UserIdentity uid, String message) throws RemoteException;
 
-    public void removeUser(String kickID) throws RemoteException;
+    public void removeUser(UserIdentity uid, String kickID) throws RemoteException;
 }

@@ -353,12 +353,13 @@ public class ClientGUI {
         // and reinstantiate a ConnectionPanel in the GUI
         canvasMgr.notifyDisconnect();
         mainWindow.remove(canvasMgr.canvas);
-        ClientGUI.this.canvasPanel = new ConnectionPanel();
-        mainWindow.add(ClientGUI.this.canvasPanel);
+        canvasPanel = new ConnectionPanel();
+        mainWindow.add(canvasPanel);
         usersListModel.clear();
         toolbar.enableAll(false);
         chatEntry.setEnabled(false);
         fileMenuBar.setEnables(false, false, false);
+        canvasPanel.repaint();
     }
 
     /**
