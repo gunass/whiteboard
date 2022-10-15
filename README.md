@@ -1,6 +1,6 @@
 ## whiteboard
 
-A distributed whiteboard application written in Java by Alex Epstein and <insert name>. Arrives fully packaged with two executable classes:
+A distributed whiteboard application written in Java by Alex Epstein and Zi Jian Ng. Arrives fully packaged with two executable classes:
 
 - CreateWhiteBoard.class: spawns a server that binds to the provided hostname to store and manage access to all whiteboard data. Then, spawns a 
 client GUI to allow the admin user to access the whiteboard.
