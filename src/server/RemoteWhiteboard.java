@@ -9,6 +9,7 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
@@ -230,5 +231,14 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
         }
     }
 
+    public void removeUser(String kickID) throws RemoteException{
+        int i;
+        for (i = 0; i < users.size(); i++) {
+            if (users.get(i).uidFinder(kickID)) {
+                break;
+            }
+        }
+        clients.get(i).reset();
+    }
 
 }

@@ -3,6 +3,8 @@ package client;
 import util.UserIdentity;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.*;
 import java.awt.*;
@@ -58,6 +60,7 @@ public class ClientGUI {
     private JButton colourButton;
     private JPanel colourPanel;
     private JButton clearButton;
+    private JButton kickButton;
 
 
     private InteractiveCanvasManager canvasMgr;
@@ -65,6 +68,7 @@ public class ClientGUI {
     private UsersList usersListPanel;
     private FileMenuBar fileMenuBar;
     private File workingFile;
+    private String kickUser;
 
     /**
      * Creates a client GUI with all the default features (no refunds)
@@ -204,6 +208,12 @@ public class ClientGUI {
             this.setLayout(new GridBagLayout());
             GridBagConstraints gbc = new GridBagConstraints();
             usersList = new JList<>(usersListModel);
+            usersList.addListSelectionListener(new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    kickUser = usersList.getSelectedValue();
+                }
+            });
             usersListLabel = new JLabel("Active users");
 
             // https://www.javaprogrammingforums.com/awt-java-swing/33838-jtextpane-add-text-bottom-upwards.html
@@ -303,16 +313,19 @@ public class ClientGUI {
             ImageIcon disconnectIcon = new ImageIcon("gtk-disconnect.png");
             disconnectButton = new JButton(disconnectIcon);
             disconnectButton.addActionListener(e -> {
-                // On disconnect, delete the canvas, disable the relevant buttons,
-                // and reinstantiate a ConnectionPanel in the GUI
-                canvasMgr.notifyDisconnect();
-                mainWindow.remove(canvasMgr.canvas);
-                ClientGUI.this.canvasPanel = new ConnectionPanel();
-                mainWindow.add(ClientGUI.this.canvasPanel);
-                usersListModel.clear();
-                this.enableAll(false);
-                chatEntry.setEnabled(false);
-                fileMenuBar.setEnables(false, false, false);
+                canvasMgr.reset();
+            });
+
+            ImageIcon kickIcon = new ImageIcon("bqm-remove.png");
+            kickButton = new JButton(kickIcon);
+            kickButton.addActionListener(e -> {
+                if (kickUser == null){
+                    JOptionPane.showMessageDialog(mainWindow, "Please highlight a user from users list");
+                } else if (usersList.getSelectedIndex() == 0){
+                    JOptionPane.showMessageDialog(mainWindow, "Error: cannot select self");
+                } else {
+                    canvasMgr.removeUser(usersList.getSelectedValue());
+                }
             });
 
             this.enableAll(false);
@@ -322,6 +335,7 @@ public class ClientGUI {
             this.add(colourPanel);
             this.add(clearButton);
             this.add(disconnectButton);
+            this.add(kickButton);
         }
 
         public void enableAll(boolean v) {
@@ -329,8 +343,22 @@ public class ClientGUI {
             colourButton.setEnabled(v);
             clearButton.setEnabled(v);
             disconnectButton.setEnabled(v);
+            kickButton.setEnabled(v);
         }
 
+    }
+
+    public void reset(){
+        // On disconnect, delete the canvas, disable the relevant buttons,
+        // and reinstantiate a ConnectionPanel in the GUI
+        canvasMgr.notifyDisconnect();
+        mainWindow.remove(canvasMgr.canvas);
+        ClientGUI.this.canvasPanel = new ConnectionPanel();
+        mainWindow.add(ClientGUI.this.canvasPanel);
+        usersListModel.clear();
+        toolbar.enableAll(false);
+        chatEntry.setEnabled(false);
+        fileMenuBar.setEnables(false, false, false);
     }
 
     /**
@@ -421,6 +449,7 @@ public class ClientGUI {
                 mainWindow.add(canvasMgr.canvas);
                 canvasMgr.canvas.setBounds(0, 0, _CANVAS_WIDTH, _CANVAS_HEIGHT);
                 clearButton.setEnabled(canvasMgr.isAdmin());
+                kickButton.setEnabled(canvasMgr.isAdmin());
 
                 toolbar.enableAll(true);
                 chatEntry.setEnabled(true);
@@ -429,6 +458,8 @@ public class ClientGUI {
                 colourButton.setToolTipText("Select the colour to draw with");
                 clearButton.setToolTipText(canvasMgr.isAdmin() ? "Clear the canvas" : "Administrator only");
                 clearButton.setEnabled(canvasMgr.isAdmin());
+                kickButton.setToolTipText(canvasMgr.isAdmin() ? "Kick selected user" : "Administrator only");
+                kickButton.setEnabled(canvasMgr.isAdmin());
                 disconnectButton.setToolTipText(canvasMgr.isAdmin() ? "Close the server" : "Disconnect from server");
 
                 fileMenuBar.setEnables(true, false, true);

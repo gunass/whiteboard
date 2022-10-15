@@ -20,4 +20,12 @@ public class UserIdentity implements Serializable {
         return u.username.equals(this.username) && u.secret.equals(this.secret);
     }
 
+    public boolean uidFinder(String username){
+        if (this.username.equals(username)){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

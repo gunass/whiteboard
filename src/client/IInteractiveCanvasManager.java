@@ -1,6 +1,7 @@
 package client;
 
 import drawing.Drawing;
+import server.IRemoteWhiteboard;
 import util.UserIdentity;
 
 import java.rmi.Remote;
@@ -24,4 +25,5 @@ public interface IInteractiveCanvasManager extends Remote {
 
     void newChatMessage(String username, String message) throws RemoteException;
 
+    void reset() throws RemoteException;
 }

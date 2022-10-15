@@ -245,4 +245,15 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
 
         }
     }
+
+    public void removeUser(String kickID) {
+        try {
+            remoteWhiteboard.removeUser(kickID);
+        } catch (RemoteException ignored) {}
+    }
+
+    public void reset(){
+        gui.reset();
+    }
+
 }
