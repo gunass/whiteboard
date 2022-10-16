@@ -236,6 +236,12 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
         return false;
     }
 
+    /**
+     * Post a message to chat
+     * @param uid
+     * @param message
+     * @throws RemoteException
+     */
     public void sendMessage(UserIdentity uid, String message) throws RemoteException {
         if (isUser(uid)) {
             for (IInteractiveCanvasManager c : clients) {
@@ -244,6 +250,12 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
         }
     }
 
+    /**
+     * Allows admin to kick a user from the server
+     * @param uid
+     * @param kickID
+     * @throws RemoteException
+     */
     public void removeUser(UserIdentity uid, String kickID) throws RemoteException{
 
         if (uid.is(admin)) {

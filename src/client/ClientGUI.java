@@ -316,7 +316,7 @@ public class ClientGUI {
                 canvasMgr.reset();
             });
 
-            ImageIcon kickIcon = new ImageIcon("bqm-remove.png");
+            ImageIcon kickIcon = new ImageIcon("kickuser.png");
             kickButton = new JButton(kickIcon);
             kickButton.addActionListener(e -> {
                 if (kickUser == null){
