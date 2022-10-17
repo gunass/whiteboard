@@ -12,7 +12,7 @@
 
 \section{Introduction}
 
-The system we present is a collaborative whiteboard where multiple users can simultaneously draw to a single consistent canvas. The network is structured as a single main server with multiple clients: the server maintains a canonical state of the whiteboard and performs user management functions. 
+The system we present is a collaborative whiteboard where multiple users can simultaneously draw to a single consistent canvas. The network is structured as a single main server with multiple clients: the server maintains a canonical state of the whiteboard and performs user management functions.
 
 From our testing we have established that the whiteboard performs properly under the required conditions. Multiple users are able to access and modify the whiteboard concurrently, and each user sees exactly the same drawings rendered on the whiteboard. Users are able to draw with the main shape tools (line, rectangle, circle, triangle), free line, and enter text. All drawings including text are colourable. 
 
@@ -20,7 +20,7 @@ As additional features, we have implemented a user chat protocol, the ability to
 
 \section{System Architecture \& Communication \\Protocols}
 
-The whiteboard protocol was implemented using Java RMI. There are two main modules: client and server. 
+The whiteboard protocol was implemented using Java RMI as a callback-oriented architecture. There are two main modules: client and server. 
 
 The client module is responsible for displaying the GUI (\textit{ClientGUI}) and the rendered canvas (\textit{InteractiveCanvas}), and hosts a remote object (\textit{InteractiveCanvasManager}) responsible for communication with the server, both issuing and receiving method invocations. 
 
@@ -35,7 +35,7 @@ An example drawing, involving a call from client to server, is shown in figure \
 \centering
 \end{figure}
 
-In figure \ref{fig:draw}, a drawing of a rectangle is recognised by a mouse listener acting on the client's canvas. When the mouse is released, this triggers the canvas to send the drawing to its manager, which invokes the remote method in the server. In the server call, the canvas manager sends its \textit{UserIdentity} along with the \textit{Drawing}. The server subsequently verifies the user's identity, which consists of a username and password, then adds the drawing to its internal representation of the canvas. Then, the server issues a remote invocation to each of the client processes containing the drawing, which notifies them to render the new drawing.
+In figure \ref{fig:draw}, a drawing of a rectangle is recognised by a mouse listener acting on the client's canvas. When the mouse is released, this triggers the canvas to send the drawing to its manager, which invokes the remote method in the server. In the server call, the canvas manager sends its \textit{UserIdentity} along with the \textit{Drawing}. The server subsequently verifies the user's identity, which consists of a username and password, then adds the drawing to its internal representation of the canvas. Then, the server issues a callback invocation to each of the client processes containing the drawing, which notifies them to render the new drawing.
 
 At the client side, new drawings are received by the canvas manager, which adds them to a queue and notifies the canvas that drawings are pending. On receiving this notification, each drawing is drawn permanently to a flat image, which the client's canvas actually renders (the ``canvas flat"). 
 
@@ -46,18 +46,18 @@ At the client side, new drawings are received by the canvas manager, which adds 
 \centering
 \end{figure}
 
-For user management operations, the procedure is similar, as shown in figure \ref{fig:join}. Once a user has initiated a join request and been approved by the administrator, the server invokes methods in each client to notify them of a new user: similarly for when a user leaves, or a user sends a message in chat; the client uses one-way unicast and the server uses one-way multicast to update the global state. 
+For user management operations, the procedure is similar, as shown in figure \ref{fig:join}. Once a user has initiated a join request and been approved by the administrator, the server invokes callback methods in each client to notify them of a new user: similarly for when a user leaves, or a user sends a message in chat; the client uses one-way unicast and the server uses one-way multicast to update the global state. 
 
 
 \section{Implementation Details}
 
-For the purposes of authentication, we have implemented a simple protocol which consists of the passing of \textit{UserIdentity} objects between client and server. Each identity object contains the username and password of the sending client. Obviously, this is not secure, but the whiteboard is neither persistent nor a high-integrity system, and so plain-text was considered adequate. Users are also somewhat protected against spoofing by the fact that duplicate usernames are disallowed.
+For the purposes of authentication, we have implemented a simple protocol which consists of the passing of \textit{UserIdentity} objects between client and server. Each identity object contains the username and password of the sending client, and the server stores duplicates of these items in addition to the admin's credentials to verify certain operations. Obviously, this is not secure, but the whiteboard is neither persistent nor a high-integrity system, and so plain-text was considered adequate. Users are also somewhat protected against spoofing by the fact that duplicate usernames are disallowed.
 
 The \textit{Drawing} package was designed to ensure small message sizes, and therefore throughput, and therefore the scalability of the system. Each drawing is represented by the minimum amount of information necessary to render it: in the case of simple shapes, a pair of integer coordinates is sufficient representation. In the case of free lines, a novel compression algorithm was written to minimise the amount of space required, reducing it by 80\% in some cases while preserving all but the most granular details of the line. 
 
 Persistent storage of the canvas is accomplished locally on the client's machine, as a serialised array of drawings presented as a ``.canvas" file. When saving, the client requests the drawings array from the server, and when opening, the (admin) client deserialises the saved file and sends this to the server, which replaces the state with the saved state, changing the view for all clients. The performance bottleneck for this process is the number of \textit{FreeLine} objects in the array, as the size of the other drawings is trivial. However, this has been somewhat mitigated, as shown above.
 
-The kick user command functions by using the remotewhiteboard to initiate the notifydisconnect function for the kicked user. Therefore, it follows the protocol where a user wishes to disconnect from the server, only the request comes from the admin instead of the user in this scenario.
+The admin user is allowed to kick another user by invoking the relevant remote method in the whiteboard server. This removes the user from the server's list of approved users, and notifies the other clients that the user has been disconnected.
 
 We now evaluate the non-functional requirements of the system, considering consistency, scalability, and performance.
 
