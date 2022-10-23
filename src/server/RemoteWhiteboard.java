@@ -71,7 +71,7 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
                 adminClient = (IInteractiveCanvasManager) Naming.lookup( "//" + hostname + "/" + uid.username);
                 clients.add(adminClient);
                 users.add(uid);
-                adminClient.notifyUserJoin(uid.username);
+                adminClient.notifyUserJoin(uid, uid.username);
             } catch (NotBoundException | MalformedURLException | ClassCastException e) {
                 admin = null;
                 return false;
@@ -101,12 +101,12 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
                 IInteractiveCanvasManager c = (IInteractiveCanvasManager) Naming.lookup( "//" + hostname + "/" + uid.username);
                 for (int i = 0; i < clients.size(); i++) {
                     // Notify other clients of the new user
-                    clients.get(i).notifyUserJoin(uid.username);
+                    clients.get(i).notifyUserJoin(users.get(i), uid.username);
                     // Notify new user of other clients
-                    c.notifyUserJoin(users.get(i).username);
+                    c.notifyUserJoin(uid, users.get(i).username);
                 }
                 // Notify user that it, itself, has joined
-                c.notifyUserJoin(uid.username);
+                c.notifyUserJoin(uid, uid.username);
                 // Add uid and ICM to the user mgmt
                 users.add(uid);
                 clients.add(c);
@@ -124,7 +124,7 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
      * @throws RemoteException
      */
     private boolean approveUser(UserIdentity uid) throws RemoteException {
-        return adminClient.approveUser(uid);
+        return adminClient.approveUser(admin, uid);
     }
 
     /**
@@ -144,7 +144,7 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
             if (uid.is(users.get(i))) {
                 j = i;
             } else {
-                clients.get(i).notifyUserLeft(uid.username);
+                clients.get(i).notifyUserLeft(users.get(i), uid.username);
             }
         }
 
@@ -185,8 +185,8 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     public void clearCanvas(UserIdentity uid) throws RemoteException {
         if (uid.is(admin)) {
             drawings = new ArrayList<Drawing>();
-            for (IInteractiveCanvasManager c : clients) {
-                c.clearCanvas();
+            for (int i = 0; i < clients.size(); i++) {
+                clients.get(i).clearCanvas(users.get(i));
             }
         }
     }
@@ -201,9 +201,9 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
     public void drawToCanvas(UserIdentity uid, Drawing drawing) throws RemoteException {
         if (isUser(uid)) {
             drawings.add(drawing);
-            for (IInteractiveCanvasManager c : clients) {
+            for (int i = 0; i < users.size(); i++) {
                 try {
-                    c.addDrawing(drawing);
+                    clients.get(i).addDrawing(users.get(i), drawing);
                 } catch (RemoteException ignored) {}
             }
         }
@@ -244,8 +244,8 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
      */
     public void sendMessage(UserIdentity uid, String message) throws RemoteException {
         if (isUser(uid)) {
-            for (IInteractiveCanvasManager c : clients) {
-                c.newChatMessage(uid.username, message);
+            for (int i = 0; i <clients.size(); i++) {
+                clients.get(i).newChatMessage(users.get(i), uid.username, message);
             }
         }
     }
@@ -262,7 +262,7 @@ public class RemoteWhiteboard extends UnicastRemoteObject implements IRemoteWhit
             for (int i = 0; i < users.size(); i++) {
                 UserIdentity u = users.get(i);
                 if (u.username.equals(kickID)) {
-                    clients.get(i).reset();
+                    clients.get(i).reset(u);
                     notifyDisconnect(u);
                     return;
                 }

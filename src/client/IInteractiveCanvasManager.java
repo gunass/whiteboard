@@ -13,17 +13,17 @@ import java.rmi.RemoteException;
  */
 public interface IInteractiveCanvasManager extends Remote {
 
-    void addDrawing(Drawing drawing) throws RemoteException;
+    void addDrawing(UserIdentity uid, Drawing drawing) throws RemoteException;
 
-    void clearCanvas() throws RemoteException;
+    void clearCanvas(UserIdentity uid) throws RemoteException;
 
-    boolean approveUser(UserIdentity uid) throws RemoteException;
+    boolean approveUser(UserIdentity uid, UserIdentity newuid) throws RemoteException;
 
-    void notifyUserJoin(String username) throws RemoteException;
+    void notifyUserJoin(UserIdentity uid, String username) throws RemoteException;
 
-    void notifyUserLeft(String username) throws RemoteException;
+    void notifyUserLeft(UserIdentity uid, String username) throws RemoteException;
 
-    void newChatMessage(String username, String message) throws RemoteException;
+    void newChatMessage(UserIdentity uid, String username, String message) throws RemoteException;
 
-    void reset() throws RemoteException;
+    void reset(UserIdentity uid) throws RemoteException;
 }

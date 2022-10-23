@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class InteractiveCanvasManager extends UnicastRemoteObject implements IInteractiveCanvasManager {
 
-    private final UserIdentity uid;
+    protected final UserIdentity uid;
     private final IRemoteWhiteboard remoteWhiteboard;
     protected InteractiveCanvas canvas;
     private volatile int approved = 0;
@@ -82,7 +82,8 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
      * @param drawing
      * @throws RemoteException
      */
-    public void addDrawing(Drawing drawing) throws RemoteException {
+    public void addDrawing(UserIdentity you, Drawing drawing) throws RemoteException {
+        if (!you.is(uid)) return;
         canvas.drawings.add(drawing);
         canvas.repaint();
     }
@@ -91,7 +92,8 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
      * Called by the server: clears the user's canvas.
      * @throws RemoteException
      */
-    public void clearCanvas() throws RemoteException {
+    public void clearCanvas(UserIdentity you) throws RemoteException {
+        if (!you.is(uid)) return;
         canvas.drawings = new Stack<>();
         canvas.canvasFlat = new BufferedImage(canvas.canvasFlat.getWidth(), canvas.canvasFlat.getHeight(), BufferedImage.TYPE_INT_ARGB);
         canvas.repaint();
@@ -122,7 +124,8 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
      * @param uid
      * @return
      */
-    public boolean approveUser(UserIdentity uid) {
+    public boolean approveUser(UserIdentity you, UserIdentity uid) throws RemoteException {
+        if (!you.is(uid)) return false;
         return _approveUser(uid);
     }
 
@@ -179,8 +182,8 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
      * @param username
      * @throws RemoteException
      */
-    public void notifyUserJoin(String username) throws RemoteException {
-
+    public void notifyUserJoin(UserIdentity you, String username) throws RemoteException {
+        if (!you.is(uid)) return;
         gui.addClientUser(username);
     }
 
@@ -188,18 +191,35 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
      * Called by the server to notify this client that a user has left the server
      * @return
      */
-    public void notifyUserLeft(String username) throws RemoteException {
+    public void notifyUserLeft(UserIdentity you, String username) throws RemoteException {
+        if (!you.is(uid)) return;
         gui.rmClientUser(username);
     }
 
+    /**
+     * Tells us if this client is admin
+     * @return
+     */
     boolean isAdmin() {
         return admin;
     }
 
-    public void newChatMessage(String username, String message) throws RemoteException {
+    /**
+     * Called by the server when a new chat message arrives; instructs the GUI to post it to view
+     * @param you
+     * @param username
+     * @param message
+     * @throws RemoteException
+     */
+    public void newChatMessage(UserIdentity you, String username, String message) throws RemoteException {
+        if (!you.is(uid)) return;
         gui.postToChat(username, message);
     }
 
+    /**
+     * Called by the GUI when the user chats; sends to server
+     * @param message
+     */
     public void sendToChat(String message) {
         try {
             remoteWhiteboard.sendMessage(uid, message);
@@ -208,6 +228,8 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
 
     /**
      * Downloads the array of drawings stored at the server, and serialises them into a .canvas file
+     * Called by the GUI when user requests saving canvas
+     * @param file
      */
     public void download(File file){
         try {
@@ -252,8 +274,10 @@ public class InteractiveCanvasManager extends UnicastRemoteObject implements IIn
         } catch (RemoteException ignored) {}
     }
 
-    public void reset(){
+    public void reset(UserIdentity you){
+        if (!you.is(uid)) return;
         gui.reset();
     }
+
 
 }

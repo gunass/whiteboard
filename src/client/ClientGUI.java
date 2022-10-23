@@ -307,13 +307,27 @@ public class ClientGUI {
             ImageIcon clearIcon = new ImageIcon("bqm-remove.png");
             clearButton = new JButton(clearIcon);
             clearButton.addActionListener(e -> {
-                canvasMgr.requestClearCanvas();
+                JDialog confirmDialog = new JDialog(mainWindow, "All drawings will be lost", true);
+                confirmDialog.setLayout(new FlowLayout());
+                JButton confirm = new JButton("Clear");
+                JButton unconfm = new JButton("Cancel");
+                unconfm.addActionListener(f -> {
+                    confirmDialog.dispose();
+                });
+                confirm.addActionListener(g -> {
+                    canvasMgr.requestClearCanvas();
+                    confirmDialog.dispose();
+                });
+                confirmDialog.add(confirm);
+                confirmDialog.add(unconfm);
+                confirmDialog.setSize(300,75);
+                confirmDialog.setVisible(true);
             });
 
             ImageIcon disconnectIcon = new ImageIcon("gtk-disconnect.png");
             disconnectButton = new JButton(disconnectIcon);
             disconnectButton.addActionListener(e -> {
-                canvasMgr.reset();
+                reset();
             });
 
             ImageIcon kickIcon = new ImageIcon("kickuser.png");
@@ -321,7 +335,7 @@ public class ClientGUI {
             kickButton.addActionListener(e -> {
                 if (kickUser == null){
                     JOptionPane.showMessageDialog(mainWindow, "Please highlight a user from users list");
-                } else if (usersList.getSelectedIndex() == 0){
+                } else if (usersList.getSelectedValue().equals(canvasMgr.uid.username)){
                     JOptionPane.showMessageDialog(mainWindow, "Error: cannot select self");
                 } else {
                     canvasMgr.removeUser(usersList.getSelectedValue());
