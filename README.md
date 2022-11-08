@@ -25,7 +25,6 @@ Administrators can use the "clear" button to clear the current canvas.
 
 ### wishlist
 
-- Allow the admin to kick a user
 - Custom or at least extended canvas sizing (currently locked to 500x500 - 4:3 or 16:9 would be cool)
 - Change the width of the pen (currently 1)
 - Enabled shapes to be drawn either filled or outlined (currently filled only)
